@@ -1,0 +1,36 @@
+jobs_dir: results/tau-retail
+n_attempts: 1
+timeout_multiplier: 1.0
+n_concurrent_trials: 10
+quiet: false
+retry:
+  max_retries: 3
+environment:
+  type: docker
+  force_build: false
+  delete: true
+  extra_docker_compose:
+    - benchmarks/tau3-bench/orchestrator-harness-compose.yaml
+verifier:
+  env:
+    TAU2_NL_ASSERTIONS_MODEL: gpt-5.2
+  include_logs:
+    - tau3_openinference_spans.otlp.jsonl
+agents:
+  - name: tau3-orchestrator-harness
+    import_path: tau3_orchestrator_harness_agent:Tau3OrchestratorHarnessAgent
+    model_name: gpt-5.6-luna
+    env:
+      TAU2_USER_MODEL: gpt-5.6-sol
+      TAU2_USER_REASONING_EFFORT: low
+      TAU2_USER_TEMPERATURE: "1"
+    kwargs:
+      harness_path: benchmarks/tau3-bench/harness
+      reasoning_effort: medium
+      seed: 300
+      temperature: 0.0
+      tau2_trial_index: 0
+datasets:
+  - path: datasets/tau3-bench
+    task_names:
+      - tau3-retail-*
