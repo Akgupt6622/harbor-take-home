@@ -1,0 +1,82 @@
+[
+  {
+    "cause_id": "premature_transfer_to_human",
+    "status": "proposed",
+    "description": "The agent calls transfer_to_human_agents as soon as it hits a sub-request it cannot satisfy (refund for a lost item in retail-32 turn 16; 'which order is older' in retail-59 turn 16), which terminates the episode before the user can raise or complete their remaining in-scope requests (the gold cancels/returns), whereas baseline runs that simply denied the request show the user proceeding to the gold cancellations (baseline retail-32 turns 19-38; baseline-2 retail-59 turns 12-15).",
+    "tasks": ["tau3-retail-32", "tau3-retail-59"],
+    "evidence": {
+      "tau3-retail-32": "runs/fixpack-v1/transcripts/tau3-retail-32__A5M7C57.md",
+      "tau3-retail-59": "runs/fixpack-v1/transcripts/tau3-retail-59__roWR68P.md"
+    },
+    "proposed_fix": "Amend the transfer rule in benchmarks/tau3-bench/harness/retail/policy.md (line 26) to say: only transfer when the user still needs an account action a human could perform but your tools cannot; for out-of-scope wishes (compensation for lost items, availability notifications) or information you do not have (order dates), state that you cannot help with that item and ask whether the user has any other requests before ever transferring or ending the conversation.",
+    "discovered_in": ["fixpack-v1", "baseline", "baseline-2", "baseline-3"],
+    "proposed_by": "llm",
+    "verification": null
+  },
+  {
+    "cause_id": "return_exchange_mutual_exclusion_trap",
+    "status": "proposed",
+    "description": "When the user asks for both a return and an exchange on the same delivered order (#W7181492), the agent submits the return first (turn 16), which flips the order status to 'return requested' so the gold exchange is rejected with 'Non-delivered order cannot be exchanged' (turn 18); gold contains only the exchange, and the same extra_write.return + rejected/missing exchange shape recurs in all three baselines.",
+    "tasks": ["tau3-retail-27"],
+    "evidence": {
+      "tau3-retail-27": "runs/fixpack-v1/transcripts/tau3-retail-27__YGMysLe.md"
+    },
+    "proposed_fix": "Add to the Return/Exchange sections of policy.md: a delivered order can have exactly ONE post-delivery action (a return request OR an exchange request, never both) - if the user asks for both on the same order, explain this limitation and ask which single action they want before making any write.",
+    "discovered_in": ["fixpack-v1", "baseline", "baseline-2", "baseline-3"],
+    "proposed_by": "llm",
+    "verification": null
+  },
+  {
+    "cause_id": "confirmed_address_change_dropped_before_locking_item_modify",
+    "status": "proposed",
+    "description": "The agent collected and read back three confirmed changes for pending order #W3730488 including the NYC address change (turn 38), but after the user's single 'yes' (turn 39) it executed only the two modify_pending_order_items writes (turns 40, 42) and never called modify_pending_order_address, then admitted at turn 44 that the item modification had locked the order so the address change could no longer be made; the same missing_action.modify_pending_order_address appears in baseline and baseline-2.",
+    "tasks": ["tau3-retail-112"],
+    "evidence": {
+      "tau3-retail-112": "runs/fixpack-v1/transcripts/tau3-retail-112__sdtfVD9.md"
+    },
+    "proposed_fix": "Add to the Modify pending order section of policy.md: when several changes are confirmed for one pending order, submit the address/payment changes BEFORE modify_pending_order_items (the item modification permanently locks the order), and immediately after confirmation execute every confirmed change one by one, re-checking the confirmed list before reporting completion.",
+    "discovered_in": ["fixpack-v1", "baseline", "baseline-2"],
+    "proposed_by": "llm",
+    "verification": null
+  },
+  {
+    "cause_id": "tool_output_misread_item_or_availability",
+    "status": "proposed",
+    "description": "The agent asserts facts contradicted by tool output it already retrieved: in retail-91 it told the user 'I couldn't find a smartwatch in your three orders' (turn 16) although Smart Watch item 1631806422 is in the #W7553978 order details fetched at turn 8, so the gold return is missing that item; in retail-99 it claimed 'The 1,500-piece art option is unavailable' (turn 24) although variant 5546244844 (1500 pieces, art, intermediate) is available:true in the turn-20 get_product_details result, so it exchanged to the animals variant 6245746168 against the user's stated art preference and the gold args.",
+    "tasks": ["tau3-retail-91", "tau3-retail-99"],
+    "evidence": {
+      "tau3-retail-91": "runs/fixpack-v1/transcripts/tau3-retail-91__hxmAUPd.md",
+      "tau3-retail-99": "runs/fixpack-v1/transcripts/tau3-retail-99__ykpibBF.md"
+    },
+    "proposed_fix": "Add to policy.md (near the variant-selection rule at line 142): before telling a user that an item is not in their orders or that a variant is unavailable, re-scan the already-retrieved order items / product variant list entry by entry and verify the exact 'available' flag and options of every candidate, quoting the matching entries in your reply.",
+    "discovered_in": ["fixpack-v1", "baseline-2", "baseline-3"],
+    "proposed_by": "llm",
+    "verification": null
+  },
+  {
+    "cause_id": "wrong_order_selected_without_full_enumeration",
+    "status": "proposed",
+    "description": "The user asked to exchange 'a laptop' without an order id; the account has three orders (#W3826449, #W2905754, #W4073673 per the turn-6 get_user_details result) but the agent fetched only the first two, found a laptop in #W2905754 and exchanged item 3478699712 there (turn 18), never inspecting #W4073673 which holds the gold laptop item 2216662955, producing wrong_args on both order_id and item_ids; baseline shows the same wrong-order pick.",
+    "tasks": ["tau3-retail-93"],
+    "evidence": {
+      "tau3-retail-93": "runs/fixpack-v1/transcripts/tau3-retail-93__TFYpJBX.md"
+    },
+    "proposed_fix": "Add to the Generic action rules of policy.md: when the user refers to an item without giving an order id, retrieve details for ALL orders on the account, and if the product type appears in more than one order, list the candidates and ask the user which order they mean before taking any action.",
+    "discovered_in": ["fixpack-v1", "baseline", "baseline-3"],
+    "proposed_by": "llm",
+    "verification": null
+  },
+  {
+    "cause_id": "user_sim_refuses_gold_camera_exchange",
+    "status": "proposed",
+    "description": "The gold action is exchanging camera 5996159312 for max-zoom item 9228757377 (30MP/10x/SD), and the agent offered exactly that with the correct $170.68 difference (fixpack turn 12), but the simulated user refused because 'I can't accept a resolution change' (turn 13) and ended asking for an availability notification; the identical refusal and missing_action.exchange occur in all three baselines (e.g. baseline turns 12-15), so the gold write appears unreachable given the user simulator's hard 'keep other specs the same' constraint.",
+    "tasks": ["tau3-retail-52"],
+    "evidence": {
+      "tau3-retail-52": "runs/fixpack-v1/transcripts/tau3-retail-52__dsiHrYT.md"
+    },
+    "proposed_fix": "Treat as a task-definition issue rather than an agent error: review tau3-retail-52's user instruction so the simulator's priority (maximum zoom outweighs keeping resolution identical) matches the gold action, since no policy.md change can make a correctly-offered exchange succeed when the simulated user consistently declines it (0/4 acceptances across baseline, baseline-2, baseline-3 and fixpack-v1).",
+    "discovered_in": ["fixpack-v1", "baseline", "baseline-2", "baseline-3"],
+    "proposed_by": "llm",
+    "verification": null
+  }
+]
