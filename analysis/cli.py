@@ -1,0 +1,269 @@
+"""Inspection/composition CLI over triage output.
+
+Consumes runs/<job>/triage/groups.json strictly through analysis.contracts and
+freezes TaskSets under runs/<job>/triage/tasksets/. `run` never executes
+run_subset.sh (which spends API credits) without an explicit --yes.
+
+Exit codes: 0 success, 2 user error (bad group id, missing files, clobber
+refusal). Errors go to stderr.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import random
+import shlex
+import subprocess
+import sys
+from collections.abc import Callable, Sequence
+from pathlib import Path
+
+from analysis import contracts
+
+PREVIEW_TASK_IDS = 3
+
+
+def cmd_groups(index: contracts.TriageIndex) -> int:
+    totals = index.totals
+    print(
+        f"{index.job_name}: {totals.passed}/{totals.trials} passed, "
+        f"{totals.failed} failed, {totals.errored} errored"
+    )
+    print()
+    rows: list[tuple[str, str, str, str]] = []
+    # Groups arrive pre-sorted by (-len(tasks), group_id); never re-sort.
+    for group in index.groups:
+        preview = ", ".join(group.task_ids[:PREVIEW_TASK_IDS])
+        if len(group.task_ids) > PREVIEW_TASK_IDS:
+            preview += f" (+{len(group.task_ids) - PREVIEW_TASK_IDS} more)"
+        rows.append((group.group_id, group.kind, str(len(group.tasks)), preview))
+    header = ("group_id", "kind", "n_tasks", "tasks")
+    widths = [max(len(row[i]) for row in (header, *rows)) for i in range(3)]
+    for row in (header, *rows):
+        cells = [cell.ljust(width) for cell, width in zip(row[:3], widths)]
+        print(" | ".join((*cells, row[3])))
+    return 0
+
+
+def cmd_show(
+    index: contracts.TriageIndex,
+    group_id: str,
+    show_transcript: bool,
+    repo_root: Path,
+) -> int:
+    try:
+        group = index.group(group_id)
+    except KeyError:
+        valid = ", ".join(g.group_id for g in index.groups)
+        print(
+            f"error: unknown group {group_id!r}; valid ids: {valid}",
+            file=sys.stderr,
+        )
+        return 2
+    print(f"{group.group_id} ({group.kind}, {len(group.tasks)} tasks)")
+    for ref in group.tasks:
+        print()
+        print(ref.task_id)
+        for attempt in ref.attempts:
+            turns = ",".join(str(turn) for turn in attempt.evidence_turns)
+            print(f"  {attempt.attempt_key}  turns [{turns}]  {attempt.transcript}")
+        if show_transcript and ref.attempts:
+            first = ref.attempts[0]
+            path = repo_root / first.transcript
+            if not path.is_file():
+                print(f"error: transcript not found: {path}", file=sys.stderr)
+                return 2
+            print(f"--- {first.transcript} ---")
+            print(path.read_text(), end="")
+    return 0
+
+
+def cmd_compose(
+    index: contracts.TriageIndex,
+    job_dir: Path,
+    name: str,
+    group_ids: tuple[str, ...],
+    n_controls: int | None,
+    seed: int | None,
+    force: bool,
+    repo_root: Path,
+) -> int:
+    valid = ", ".join(g.group_id for g in index.groups)
+    unknown = [
+        gid for gid in group_ids if gid not in {g.group_id for g in index.groups}
+    ]
+    if unknown:
+        print(
+            f"error: unknown group(s) {', '.join(unknown)}; valid ids: {valid}",
+            file=sys.stderr,
+        )
+        return 2
+    union: set[str] = set()
+    for gid in group_ids:
+        union.update(index.group(gid).task_ids)
+    controls: contracts.Controls | None = None
+    if n_controls is not None:
+        if seed is None:
+            print("error: --seed is required when --controls is given", file=sys.stderr)
+            return 2
+        source = repo_root / index.source
+        if not source.is_file():
+            print(f"error: source tasks file not found: {source}", file=sys.stderr)
+            return 2
+        universe: list[str] = []
+        seen: set[str] = set(union)
+        for line in source.read_text().splitlines():
+            if not line.strip():
+                continue
+            task_id = json.loads(line)["task_id"]
+            if task_id not in seen:
+                seen.add(task_id)
+                universe.append(task_id)
+        if n_controls > len(universe):
+            print(
+                f"error: requested {n_controls} controls but only {len(universe)} "
+                f"tasks exist outside the selected groups",
+                file=sys.stderr,
+            )
+            return 2
+        sampled = random.Random(seed).sample(universe, n_controls)
+        controls = contracts.Controls(
+            n_requested=n_controls, seed=seed, sampled=tuple(sampled)
+        )
+    taskset = contracts.TaskSet(
+        name=name,
+        job_name=index.job_name,
+        from_groups=group_ids,
+        controls=controls,
+        tasks=tuple(sorted(union | set(controls.sampled if controls else ()))),
+    )
+    tasksets_dir = contracts.triage_dir(job_dir) / contracts.TASKSETS_DIRNAME
+    json_path = tasksets_dir / f"{name}.json"
+    txt_path = tasksets_dir / f"{name}.txt"
+    existing = [path for path in (json_path, txt_path) if path.exists()]
+    if existing and not force:
+        listing = ", ".join(str(path) for path in existing)
+        print(
+            f"error: refusing to overwrite frozen taskset file(s): {listing} "
+            f"(pass --force to overwrite)",
+            file=sys.stderr,
+        )
+        return 2
+    contracts.dump_taskset(taskset, json_path)
+    contracts.write_tasklist(taskset, txt_path)
+    n_controls_written = len(controls.sampled) if controls else 0
+    print(
+        f"wrote {json_path} and {txt_path} "
+        f"({len(taskset.tasks)} tasks: {len(union)} from groups, {n_controls_written} controls)"
+    )
+    return 0
+
+
+def cmd_run(
+    job_dir: Path,
+    name: str,
+    harbor_job: str,
+    yes: bool,
+    extra: list[str],
+    repo_root: Path,
+    runner: Callable[[list[str], Path], int],
+) -> int:
+    tasksets_dir = contracts.triage_dir(job_dir) / contracts.TASKSETS_DIRNAME
+    json_path = tasksets_dir / f"{name}.json"
+    txt_path = tasksets_dir / f"{name}.txt"
+    missing = [path for path in (json_path, txt_path) if not path.is_file()]
+    if missing:
+        listing = ", ".join(str(path) for path in missing)
+        print(f"error: taskset {name!r} is missing file(s): {listing}", file=sys.stderr)
+        return 2
+    taskset = contracts.load_taskset(json_path)
+    try:
+        txt_display = str(txt_path.resolve().relative_to(repo_root.resolve()))
+    except ValueError:
+        txt_display = str(txt_path)
+    command = ["./run_subset.sh", harbor_job, txt_display, *extra]
+    print(
+        f"taskset {taskset.name}: {len(taskset.tasks)} tasks (from job {taskset.job_name})"
+    )
+    print(shlex.join(command))
+    if not yes:
+        print("(costs API credits; re-run with --yes to execute)")
+        return 0
+    return runner(command, repo_root)
+
+
+def subprocess_runner(command: list[str], cwd: Path) -> int:
+    # Inherits stdout/stderr so run_subset.sh output streams live.
+    return subprocess.run(command, cwd=cwd, check=False).returncode
+
+
+def main(
+    argv: Sequence[str],
+    repo_root: Path | None = None,
+    runner: Callable[[list[str], Path], int] = subprocess_runner,
+) -> int:
+    root = repo_root if repo_root is not None else Path.cwd()
+    parser = argparse.ArgumentParser(prog="analysis.cli", allow_abbrev=False)
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    groups_parser = sub.add_parser(
+        "groups", help="print totals and the ranked group table"
+    )
+    groups_parser.add_argument("job_dir", type=Path)
+
+    show_parser = sub.add_parser(
+        "show", help="print a group's tasks and attempt evidence"
+    )
+    show_parser.add_argument("job_dir", type=Path)
+    show_parser.add_argument("group_id")
+    show_parser.add_argument(
+        "--transcript",
+        action="store_true",
+        help="also print each task's first-attempt transcript",
+    )
+
+    compose_parser = sub.add_parser(
+        "compose", help="freeze a named taskset from groups"
+    )
+    compose_parser.add_argument("job_dir", type=Path)
+    compose_parser.add_argument("name")
+    compose_parser.add_argument(
+        "--groups", required=True, help="comma-separated group ids"
+    )
+    compose_parser.add_argument("--controls", type=int, default=None)
+    compose_parser.add_argument("--seed", type=int, default=None)
+    compose_parser.add_argument("--force", action="store_true")
+
+    run_parser = sub.add_parser("run", help="wrap run_subset.sh for a frozen taskset")
+    run_parser.add_argument("job_dir", type=Path)
+    run_parser.add_argument("name")
+    run_parser.add_argument("--job-name", required=True, dest="harbor_job")
+    run_parser.add_argument("--yes", action="store_true")
+
+    args, extra = parser.parse_known_args(list(argv))
+    if extra and args.command != "run":
+        print(f"error: unrecognized arguments: {' '.join(extra)}", file=sys.stderr)
+        return 2
+    job_dir: Path = args.job_dir if args.job_dir.is_absolute() else root / args.job_dir
+    if args.command == "run":
+        return cmd_run(
+            job_dir, args.name, args.harbor_job, args.yes, extra, root, runner
+        )
+    groups_path = contracts.triage_dir(job_dir) / contracts.GROUPS_FILENAME
+    if not groups_path.is_file():
+        print(f"error: triage index not found: {groups_path}", file=sys.stderr)
+        return 2
+    index = contracts.load_index(groups_path)
+    if args.command == "groups":
+        return cmd_groups(index)
+    if args.command == "show":
+        return cmd_show(index, args.group_id, args.transcript, root)
+    group_ids = tuple(gid for gid in args.groups.split(",") if gid)
+    return cmd_compose(
+        index, job_dir, args.name, group_ids, args.controls, args.seed, args.force, root
+    )
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))
