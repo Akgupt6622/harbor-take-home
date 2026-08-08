@@ -252,3 +252,18 @@ transitions).
 scoping (delivered = one return-or-exchange; pending = address+payment+items
 with address/payment BEFORE the locking item-modify), added enumerate-all-
 orders (93) and the misread guard (91/99).
+
+## Step 11 — fixpack3-v1: matched A/B confirms round 3 (8/17 → 14/17)
+
+Identical task set, harness 3f510fcd8816. Regression fully repaired for
+72/110/control-2 (all re-flipped to pass); first-ever passes for 99 (misread
+guard), 93 (enumerate-all-orders), 112 and 59 (lock-ordering). Round-1/2 wins
+27/31/32 held; all 5 controls pass. Remaining: 104 (address modify still
+dropped — partial residual, parked), 91 (unstable across harness versions —
+new messy failure shape after passing fixpack2), 52 (task-defect suspect,
+0/6 lifetime; note it now attempts the exchange but with wrong variant).
+
+**Decision:** subset iteration has converged (3 fixed causes this round;
+remaining failures are one residual, one unstable, one suspected defect).
+Next: matched full runs of the final harness for the writeup's required
+baseline-vs-final comparison.

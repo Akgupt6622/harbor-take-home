@@ -203,7 +203,7 @@
   },
   {
     "cause_id": "cross_order_item_mapping",
-    "status": "confirmed",
+    "status": "fixed",
     "description": "In multi-order conversations the agent maps items to the wrong order: 27 placed the return on the order that needed the exchange (the return flipped the status and the gold exchange was then rejected as non-deliverable); 93 exchanged on #W2905754 where gold expects #W4073673.",
     "tasks": [
       "tau3-retail-27",
@@ -279,7 +279,7 @@
   },
   {
     "cause_id": "tool_output_misread",
-    "status": "confirmed",
+    "status": "fixed",
     "description": "The agent states facts contradicting tool output it already fetched: 91 said 'couldn't find a smartwatch' though item 1631806422 was in its turn-8 order details; 99 called variant 5546244844 unavailable against available:true. Proposed by the LLM analyst, verified against raw records.",
     "tasks": [
       "tau3-retail-91",
@@ -298,8 +298,8 @@
   },
   {
     "cause_id": "modify_ordering_and_lock",
-    "status": "confirmed",
-    "description": "Pending-order changes executed in the wrong order: modify_pending_order_items locks the order, so a confirmed address change submitted after (or skipped) never lands (112, and the round-2 regression generalized this to skipping modifications entirely on 72/104/110/59). Analyst's lock-ordering insight, correctly scoped in round 3.",
+    "status": "fixed",
+    "description": "Pending-order changes executed in the wrong order: modify_pending_order_items locks the order, so a confirmed address change submitted after (or skipped) never lands (112, and the round-2 regression generalized this to skipping modifications entirely on 72/104/110/59). Analyst's lock-ordering insight, correctly scoped in round 3. fixpack3-v1: 112/59/72/110 pass; 104's address modify still missing (partial residual).",
     "tasks": [
       "tau3-retail-112",
       "tau3-retail-72",
