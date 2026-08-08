@@ -1,0 +1,363 @@
+{
+    "schema_version": 1,
+    "created_at": "2026-08-08T18:48:21.569555Z",
+    "harbor": {
+        "version": "0.15.0",
+        "git_commit_hash": "c9ed372714798cba15d309e7eaaf358c3cac2252",
+        "is_editable": true
+    },
+    "invocation": [
+        "/Users/akshay/harbor-take-home/.venv/bin/harbor",
+        "run",
+        "-y",
+        "-c",
+        "tau-retail.yaml",
+        "--job-name",
+        "smoke",
+        "--path",
+        "datasets/tau3-bench",
+        "--include-task-name",
+        "tau3-retail-*",
+        "--n-tasks",
+        "5",
+        "--env-file",
+        ".env"
+    ],
+    "n_concurrent_trials": 60,
+    "retry": {
+        "max_retries": 3,
+        "exclude_exceptions": [
+            "RewardFileEmptyError",
+            "VerifierTimeoutError",
+            "AgentTimeoutError",
+            "RewardFileNotFoundError",
+            "ApiUsageLimitError",
+            "VerifierOutputParseError"
+        ],
+        "wait_multiplier": 1.0,
+        "min_wait_sec": 1.0,
+        "max_wait_sec": 60.0
+    },
+    "trials": [
+        {
+            "task": {
+                "name": "tau3-retail-91",
+                "type": "local",
+                "digest": "sha256:ed2ea9e8fdfa046d5269f4b94cc79f74df95b0fca41bced0780135a3c9929b73",
+                "source": "tau3-bench",
+                "path": "datasets/tau3-bench/tau3-retail-91"
+            },
+            "install_only": false,
+            "timeout_multiplier": 1.0,
+            "agent": {
+                "name": "tau3-orchestrator-harness",
+                "import_path": "tau3_orchestrator_harness_agent:Tau3OrchestratorHarnessAgent",
+                "model_name": "gpt-5.6-luna",
+                "skills": [],
+                "extra_allowed_hosts": [],
+                "kwargs": {
+                    "harness_path": "benchmarks/tau3-bench/harness",
+                    "reasoning_effort": "medium",
+                    "seed": 300,
+                    "temperature": 0.0,
+                    "tau2_trial_index": 0
+                },
+                "env": {
+                    "TAU2_USER_MODEL": "gpt-5.6-sol",
+                    "TAU2_USER_REASONING_EFFORT": "low",
+                    "TAU2_USER_TEMPERATURE": "1"
+                },
+                "mcp_servers": []
+            },
+            "skills": [],
+            "environment": {
+                "type": "modal",
+                "force_build": false,
+                "delete": true,
+                "cpu_enforcement_policy": "auto",
+                "memory_enforcement_policy": "auto",
+                "override_cpus": 2,
+                "override_memory_mb": 4096,
+                "extra_docker_compose": [
+                    "benchmarks/tau3-bench/orchestrator-harness-compose.yaml"
+                ],
+                "env": {},
+                "kwargs": {
+                    "modal_vm_runtime": true
+                },
+                "extra_allowed_hosts": []
+            },
+            "extra_docker_compose": [
+                {
+                    "path": "benchmarks/tau3-bench/orchestrator-harness-compose.yaml",
+                    "digest": "sha256:b45d468b5174f21f8c13ccada6f0b3e74433dc49c2288097d66c91d78f901d78"
+                }
+            ],
+            "verifier": {
+                "include_logs": [
+                    "tau3_openinference_spans.otlp.jsonl"
+                ],
+                "env": {
+                    "TAU2_NL_ASSERTIONS_MODEL": "gpt-5.2"
+                },
+                "disable": false
+            }
+        },
+        {
+            "task": {
+                "name": "tau3-retail-65",
+                "type": "local",
+                "digest": "sha256:d5808548297828cb8ecb837d8561589100d098ec74eeb7fda07269006d2fff75",
+                "source": "tau3-bench",
+                "path": "datasets/tau3-bench/tau3-retail-65"
+            },
+            "install_only": false,
+            "timeout_multiplier": 1.0,
+            "agent": {
+                "name": "tau3-orchestrator-harness",
+                "import_path": "tau3_orchestrator_harness_agent:Tau3OrchestratorHarnessAgent",
+                "model_name": "gpt-5.6-luna",
+                "skills": [],
+                "extra_allowed_hosts": [],
+                "kwargs": {
+                    "harness_path": "benchmarks/tau3-bench/harness",
+                    "reasoning_effort": "medium",
+                    "seed": 300,
+                    "temperature": 0.0,
+                    "tau2_trial_index": 0
+                },
+                "env": {
+                    "TAU2_USER_MODEL": "gpt-5.6-sol",
+                    "TAU2_USER_REASONING_EFFORT": "low",
+                    "TAU2_USER_TEMPERATURE": "1"
+                },
+                "mcp_servers": []
+            },
+            "skills": [],
+            "environment": {
+                "type": "modal",
+                "force_build": false,
+                "delete": true,
+                "cpu_enforcement_policy": "auto",
+                "memory_enforcement_policy": "auto",
+                "override_cpus": 2,
+                "override_memory_mb": 4096,
+                "extra_docker_compose": [
+                    "benchmarks/tau3-bench/orchestrator-harness-compose.yaml"
+                ],
+                "env": {},
+                "kwargs": {
+                    "modal_vm_runtime": true
+                },
+                "extra_allowed_hosts": []
+            },
+            "extra_docker_compose": [
+                {
+                    "path": "benchmarks/tau3-bench/orchestrator-harness-compose.yaml",
+                    "digest": "sha256:b45d468b5174f21f8c13ccada6f0b3e74433dc49c2288097d66c91d78f901d78"
+                }
+            ],
+            "verifier": {
+                "include_logs": [
+                    "tau3_openinference_spans.otlp.jsonl"
+                ],
+                "env": {
+                    "TAU2_NL_ASSERTIONS_MODEL": "gpt-5.2"
+                },
+                "disable": false
+            }
+        },
+        {
+            "task": {
+                "name": "tau3-retail-62",
+                "type": "local",
+                "digest": "sha256:2d7e51588c778f5c277a48843f24ab159ab1b70079170fb764e809da8cd1c5ac",
+                "source": "tau3-bench",
+                "path": "datasets/tau3-bench/tau3-retail-62"
+            },
+            "install_only": false,
+            "timeout_multiplier": 1.0,
+            "agent": {
+                "name": "tau3-orchestrator-harness",
+                "import_path": "tau3_orchestrator_harness_agent:Tau3OrchestratorHarnessAgent",
+                "model_name": "gpt-5.6-luna",
+                "skills": [],
+                "extra_allowed_hosts": [],
+                "kwargs": {
+                    "harness_path": "benchmarks/tau3-bench/harness",
+                    "reasoning_effort": "medium",
+                    "seed": 300,
+                    "temperature": 0.0,
+                    "tau2_trial_index": 0
+                },
+                "env": {
+                    "TAU2_USER_MODEL": "gpt-5.6-sol",
+                    "TAU2_USER_REASONING_EFFORT": "low",
+                    "TAU2_USER_TEMPERATURE": "1"
+                },
+                "mcp_servers": []
+            },
+            "skills": [],
+            "environment": {
+                "type": "modal",
+                "force_build": false,
+                "delete": true,
+                "cpu_enforcement_policy": "auto",
+                "memory_enforcement_policy": "auto",
+                "override_cpus": 2,
+                "override_memory_mb": 4096,
+                "extra_docker_compose": [
+                    "benchmarks/tau3-bench/orchestrator-harness-compose.yaml"
+                ],
+                "env": {},
+                "kwargs": {
+                    "modal_vm_runtime": true
+                },
+                "extra_allowed_hosts": []
+            },
+            "extra_docker_compose": [
+                {
+                    "path": "benchmarks/tau3-bench/orchestrator-harness-compose.yaml",
+                    "digest": "sha256:b45d468b5174f21f8c13ccada6f0b3e74433dc49c2288097d66c91d78f901d78"
+                }
+            ],
+            "verifier": {
+                "include_logs": [
+                    "tau3_openinference_spans.otlp.jsonl"
+                ],
+                "env": {
+                    "TAU2_NL_ASSERTIONS_MODEL": "gpt-5.2"
+                },
+                "disable": false
+            }
+        },
+        {
+            "task": {
+                "name": "tau3-retail-96",
+                "type": "local",
+                "digest": "sha256:d4e61b8586ff72fed75fc4fef3162e95de3fe8c51f4aaf57b3e738f8c19aa52b",
+                "source": "tau3-bench",
+                "path": "datasets/tau3-bench/tau3-retail-96"
+            },
+            "install_only": false,
+            "timeout_multiplier": 1.0,
+            "agent": {
+                "name": "tau3-orchestrator-harness",
+                "import_path": "tau3_orchestrator_harness_agent:Tau3OrchestratorHarnessAgent",
+                "model_name": "gpt-5.6-luna",
+                "skills": [],
+                "extra_allowed_hosts": [],
+                "kwargs": {
+                    "harness_path": "benchmarks/tau3-bench/harness",
+                    "reasoning_effort": "medium",
+                    "seed": 300,
+                    "temperature": 0.0,
+                    "tau2_trial_index": 0
+                },
+                "env": {
+                    "TAU2_USER_MODEL": "gpt-5.6-sol",
+                    "TAU2_USER_REASONING_EFFORT": "low",
+                    "TAU2_USER_TEMPERATURE": "1"
+                },
+                "mcp_servers": []
+            },
+            "skills": [],
+            "environment": {
+                "type": "modal",
+                "force_build": false,
+                "delete": true,
+                "cpu_enforcement_policy": "auto",
+                "memory_enforcement_policy": "auto",
+                "override_cpus": 2,
+                "override_memory_mb": 4096,
+                "extra_docker_compose": [
+                    "benchmarks/tau3-bench/orchestrator-harness-compose.yaml"
+                ],
+                "env": {},
+                "kwargs": {
+                    "modal_vm_runtime": true
+                },
+                "extra_allowed_hosts": []
+            },
+            "extra_docker_compose": [
+                {
+                    "path": "benchmarks/tau3-bench/orchestrator-harness-compose.yaml",
+                    "digest": "sha256:b45d468b5174f21f8c13ccada6f0b3e74433dc49c2288097d66c91d78f901d78"
+                }
+            ],
+            "verifier": {
+                "include_logs": [
+                    "tau3_openinference_spans.otlp.jsonl"
+                ],
+                "env": {
+                    "TAU2_NL_ASSERTIONS_MODEL": "gpt-5.2"
+                },
+                "disable": false
+            }
+        },
+        {
+            "task": {
+                "name": "tau3-retail-54",
+                "type": "local",
+                "digest": "sha256:9341e1fb43c62ce039ad01bb987cb7695e374a65817e566a3c0f7af4eb03ecd5",
+                "source": "tau3-bench",
+                "path": "datasets/tau3-bench/tau3-retail-54"
+            },
+            "install_only": false,
+            "timeout_multiplier": 1.0,
+            "agent": {
+                "name": "tau3-orchestrator-harness",
+                "import_path": "tau3_orchestrator_harness_agent:Tau3OrchestratorHarnessAgent",
+                "model_name": "gpt-5.6-luna",
+                "skills": [],
+                "extra_allowed_hosts": [],
+                "kwargs": {
+                    "harness_path": "benchmarks/tau3-bench/harness",
+                    "reasoning_effort": "medium",
+                    "seed": 300,
+                    "temperature": 0.0,
+                    "tau2_trial_index": 0
+                },
+                "env": {
+                    "TAU2_USER_MODEL": "gpt-5.6-sol",
+                    "TAU2_USER_REASONING_EFFORT": "low",
+                    "TAU2_USER_TEMPERATURE": "1"
+                },
+                "mcp_servers": []
+            },
+            "skills": [],
+            "environment": {
+                "type": "modal",
+                "force_build": false,
+                "delete": true,
+                "cpu_enforcement_policy": "auto",
+                "memory_enforcement_policy": "auto",
+                "override_cpus": 2,
+                "override_memory_mb": 4096,
+                "extra_docker_compose": [
+                    "benchmarks/tau3-bench/orchestrator-harness-compose.yaml"
+                ],
+                "env": {},
+                "kwargs": {
+                    "modal_vm_runtime": true
+                },
+                "extra_allowed_hosts": []
+            },
+            "extra_docker_compose": [
+                {
+                    "path": "benchmarks/tau3-bench/orchestrator-harness-compose.yaml",
+                    "digest": "sha256:b45d468b5174f21f8c13ccada6f0b3e74433dc49c2288097d66c91d78f901d78"
+                }
+            ],
+            "verifier": {
+                "include_logs": [
+                    "tau3_openinference_spans.otlp.jsonl"
+                ],
+                "env": {
+                    "TAU2_NL_ASSERTIONS_MODEL": "gpt-5.2"
+                },
+                "disable": false
+            }
+        }
+    ]
+}
