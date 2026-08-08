@@ -64,10 +64,10 @@ class TrialRecord(StrictModel):
     agent_model: str
     user_model: str
     # Fields below are None only on exception records (see validator).
-    seed: int | None
-    termination_reason: str | None
-    step_count: int | None
-    verifier: VerifierResult | None
+    seed: int | None = None
+    termination_reason: str | None = None
+    step_count: int | None = None
+    verifier: VerifierResult | None = None
     # Serialized exception_info for crashed trials. A third bucket: excluded
     # from pass/fail cross-checks, counted against the job's n_errored_trials.
     exception: str | None = None
