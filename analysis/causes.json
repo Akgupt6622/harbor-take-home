@@ -1,0 +1,137 @@
+[
+  {
+    "cause_id": "auth_username_deadend",
+    "status": "confirmed",
+    "description": "User cannot recall the account email and offers a username-shaped handle (e.g. mei_kovacs_8020) plus ZIP; the agent refuses to authenticate instead of deriving first/last name from the handle, so the conversation ends with zero tool calls.",
+    "tasks": [
+      "tau3-retail-5",
+      "tau3-retail-6",
+      "tau3-retail-7",
+      "tau3-retail-8",
+      "tau3-retail-9",
+      "tau3-retail-67",
+      "tau3-retail-68"
+    ],
+    "evidence": {
+      "tau3-retail-8": "runs/baseline/transcripts/tau3-retail-8__Fk6JTSo.md",
+      "tau3-retail-9": "runs/baseline/transcripts/tau3-retail-9__dJxARUH.md",
+      "tau3-retail-67": "runs/baseline/transcripts/tau3-retail-67__FFF5XoB.md"
+    },
+    "proposed_fix": "Prompt: when the customer offers a username/user-id-shaped handle, parse first and last name from it and authenticate via find_user_id_by_name_zip with the provided ZIP.",
+    "discovered_in": [
+      "baseline",
+      "baseline-2",
+      "baseline-3"
+    ],
+    "proposed_by": "human",
+    "verification": null
+  },
+  {
+    "cause_id": "exchange_payment_method_assumed",
+    "status": "proposed",
+    "description": "When proposing an exchange with a price difference, the agent assumes the original payment method instead of asking; the user declines the otherwise-correct proposal.",
+    "tasks": [
+      "tau3-retail-52",
+      "tau3-retail-98"
+    ],
+    "evidence": {
+      "tau3-retail-52": "runs/baseline/transcripts/tau3-retail-52__xYoKHV2.md"
+    },
+    "proposed_fix": "Prompt: ask which payment method to use for exchange price differences instead of assuming the original.",
+    "discovered_in": [
+      "baseline"
+    ],
+    "proposed_by": "human",
+    "verification": null
+  },
+  {
+    "cause_id": "exchange_wrong_variant_resolution",
+    "status": "confirmed",
+    "description": "On exchanges the agent echoes the customer's existing item id or picks the wrong sibling variant instead of resolving the requested options to the correct item id via get_product_details.",
+    "tasks": [
+      "tau3-retail-18",
+      "tau3-retail-45",
+      "tau3-retail-91",
+      "tau3-retail-99",
+      "tau3-retail-107"
+    ],
+    "evidence": {
+      "tau3-retail-91": "runs/baseline/transcripts/tau3-retail-91__je8eUKD.md",
+      "tau3-retail-107": "runs/baseline/transcripts/tau3-retail-107__vQuSSj4.md"
+    },
+    "proposed_fix": "Prompt: exchanges must look up the product's variants and select the item id matching the requested options; never reuse the old item id unless the options are identical.",
+    "discovered_in": [
+      "baseline",
+      "baseline-2",
+      "baseline-3"
+    ],
+    "proposed_by": "human",
+    "verification": null
+  },
+  {
+    "cause_id": "address_country_not_canonical",
+    "status": "proposed",
+    "description": "When modifying an address the agent rewrites unchanged fields in non-canonical form (country 'United States' vs the DB's 'USA'), failing the DB end-state check.",
+    "tasks": [
+      "tau3-retail-59"
+    ],
+    "evidence": {
+      "tau3-retail-59": "runs/baseline/transcripts/tau3-retail-59__65ktDcT.md"
+    },
+    "proposed_fix": "Prompt: when modifying addresses, copy unchanged fields verbatim from the existing record.",
+    "discovered_in": [
+      "baseline",
+      "baseline-2",
+      "baseline-3"
+    ],
+    "proposed_by": "human",
+    "verification": null
+  },
+  {
+    "cause_id": "multi_request_scope_errors",
+    "status": "proposed",
+    "description": "On multi-part requests the agent drops or over-scopes actions: modifies extra items, performs a return where an exchange was wanted, or misses one of several orders. Heterogeneous; needs per-task reads before a fix is stated.",
+    "tasks": [
+      "tau3-retail-27",
+      "tau3-retail-31",
+      "tau3-retail-32",
+      "tau3-retail-72",
+      "tau3-retail-93",
+      "tau3-retail-104",
+      "tau3-retail-110",
+      "tau3-retail-112"
+    ],
+    "evidence": {
+      "tau3-retail-72": "runs/baseline/transcripts/tau3-retail-72__n7PdQZm.md",
+      "tau3-retail-27": "runs/baseline/transcripts/tau3-retail-27__Who3Rqu.md"
+    },
+    "proposed_fix": "TBD after per-task reads; likely running-checklist guidance for multi-part requests.",
+    "discovered_in": [
+      "baseline",
+      "baseline-2",
+      "baseline-3"
+    ],
+    "proposed_by": "human",
+    "verification": null
+  },
+  {
+    "cause_id": "gift_card_balance_unhandled",
+    "status": "proposed",
+    "description": "Exchange rejected for insufficient gift card balance; the agent does not fall back to another payment method or renegotiate, leaving the task incomplete.",
+    "tasks": [
+      "tau3-retail-105",
+      "tau3-retail-71"
+    ],
+    "evidence": {
+      "tau3-retail-105": "runs/baseline/transcripts/tau3-retail-105__2Ud6St7.md"
+    },
+    "proposed_fix": "TBD after reading 105/71; likely guidance to offer an alternative payment method when a balance rejection occurs.",
+    "discovered_in": [
+      "baseline",
+      "baseline-2",
+      "baseline-3"
+    ],
+    "proposed_by": "human",
+    "verification": null
+  }
+]

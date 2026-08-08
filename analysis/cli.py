@@ -20,6 +20,7 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 
 from analysis import contracts
+from analysis.causes import DEFAULT_CAUSES_PATH, Cause, get_cause, load_causes
 
 PREVIEW_TASK_IDS = 3
 
@@ -151,8 +152,10 @@ def cmd_compose(
     job_dir: Path,
     name: str,
     group_ids: tuple[str, ...],
+    cause: Cause | None,
     n_controls: int | None,
     seed: int | None,
+    control_jobs: tuple[Path, ...],
     force: bool,
     repo_root: Path,
 ) -> int:
@@ -169,24 +172,19 @@ def cmd_compose(
     union: set[str] = set()
     for gid in group_ids:
         union.update(index.group(gid).task_ids)
+    provenance = group_ids
+    if cause is not None:
+        union.update(cause.tasks)
+        provenance = (*group_ids, f"cause:{cause.cause_id}")
     controls: contracts.Controls | None = None
     if n_controls is not None:
         if seed is None:
             print("error: --seed is required when --controls is given", file=sys.stderr)
             return 2
-        source = repo_root / index.source
-        if not source.is_file():
-            print(f"error: source tasks file not found: {source}", file=sys.stderr)
+        universe, error = _control_universe(index, union, control_jobs, repo_root)
+        if error is not None:
+            print(f"error: {error}", file=sys.stderr)
             return 2
-        universe: list[str] = []
-        seen: set[str] = set(union)
-        for line in source.read_text().splitlines():
-            if not line.strip():
-                continue
-            task_id = json.loads(line)["task_id"]
-            if task_id not in seen:
-                seen.add(task_id)
-                universe.append(task_id)
         if n_controls > len(universe):
             print(
                 f"error: requested {n_controls} controls but only {len(universe)} "
@@ -201,7 +199,7 @@ def cmd_compose(
     taskset = contracts.TaskSet(
         name=name,
         job_name=index.job_name,
-        from_groups=group_ids,
+        from_groups=provenance,
         controls=controls,
         tasks=tuple(sorted(union | set(controls.sampled if controls else ()))),
     )
@@ -225,6 +223,51 @@ def cmd_compose(
         f"({len(taskset.tasks)} tasks: {len(union)} from groups, {n_controls_written} controls)"
     )
     return 0
+
+
+def _control_universe(
+    index: contracts.TriageIndex,
+    members: set[str],
+    control_jobs: tuple[Path, ...],
+    repo_root: Path,
+) -> tuple[list[str], str | None]:
+    """Sampling universe for regression controls, in deterministic file order.
+
+    With --controls-from, only tasks that PASSED in every listed job qualify:
+    controls exist to catch regressions, and a task that was already failing or
+    flaky carries no regression signal (baseline noise is ±7 tasks).
+    """
+    sources = [repo_root / job / "tasks.jsonl" for job in control_jobs] or [
+        repo_root / index.source
+    ]
+    passing_everywhere: dict[str, bool] | None = None
+    order: list[str] = []
+    for source in sources:
+        if not source.is_file():
+            return [], f"controls source not found: {source}"
+        verdicts: dict[str, bool] = {}
+        for line in source.read_text().splitlines():
+            if not line.strip():
+                continue
+            record = json.loads(line)
+            verdict = record.get("verifier")
+            passed = bool(verdict and verdict.get("passed"))
+            verdicts[record["task_id"]] = passed if control_jobs else True
+            if passing_everywhere is None:
+                order.append(record["task_id"])
+        if passing_everywhere is None:
+            passing_everywhere = verdicts
+        else:
+            passing_everywhere = {
+                task: ok and verdicts.get(task, False)
+                for task, ok in passing_everywhere.items()
+            }
+    assert passing_everywhere is not None
+    return [
+        task
+        for task in order
+        if task not in members and passing_everywhere.get(task, False)
+    ], None
 
 
 def cmd_run(
@@ -308,6 +351,15 @@ def main(
         default="",
         help="comma-separated tool names; selects every group of those tools",
     )
+    compose_parser.add_argument(
+        "--cause", default=None, help="cause_id from the registry"
+    )
+    compose_parser.add_argument("--cause-file", type=Path, default=DEFAULT_CAUSES_PATH)
+    compose_parser.add_argument(
+        "--controls-from",
+        default="",
+        help="comma-separated runs/<job> dirs; controls sample only from tasks passing in ALL of them",
+    )
     compose_parser.add_argument("--controls", type=int, default=None)
     compose_parser.add_argument("--seed", type=int, default=None)
     compose_parser.add_argument("--force", action="store_true")
@@ -353,11 +405,38 @@ def main(
             for group in index.groups
             if tool_of(group.group_id) in tools and group.group_id not in group_ids
         )
-    if not group_ids:
-        print("error: provide --groups and/or --tools", file=sys.stderr)
+    cause: Cause | None = None
+    if args.cause is not None:
+        causes_path = (
+            args.cause_file if args.cause_file.is_absolute() else root / args.cause_file
+        )
+        if not causes_path.is_file():
+            print(f"error: cause file not found: {causes_path}", file=sys.stderr)
+            return 2
+        try:
+            cause = get_cause(load_causes(causes_path), args.cause)
+        except KeyError:
+            valid_causes = ", ".join(c.cause_id for c in load_causes(causes_path))
+            print(
+                f"error: unknown cause {args.cause!r}; valid: {valid_causes}",
+                file=sys.stderr,
+            )
+            return 2
+    if not group_ids and cause is None:
+        print("error: provide --groups, --tools, and/or --cause", file=sys.stderr)
         return 2
+    control_jobs = tuple(Path(p) for p in args.controls_from.split(",") if p)
     return cmd_compose(
-        index, job_dir, args.name, group_ids, args.controls, args.seed, args.force, root
+        index,
+        job_dir,
+        args.name,
+        group_ids,
+        cause,
+        args.controls,
+        args.seed,
+        control_jobs,
+        args.force,
+        root,
     )
 
 

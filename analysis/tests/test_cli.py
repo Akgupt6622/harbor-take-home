@@ -376,4 +376,4 @@ def test_compose_requires_groups_or_tools(
 ) -> None:
     make_repo(tmp_path)
     assert main(["compose", JOB_ARG, "empty"], repo_root=tmp_path) == 2
-    assert "--groups and/or --tools" in capsys.readouterr().err
+    assert "--groups, --tools, and/or --cause" in capsys.readouterr().err
