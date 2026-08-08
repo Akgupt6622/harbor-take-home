@@ -13,6 +13,7 @@ from typing import Any
 import pytest
 
 from analysis import contracts
+from analysis.error_keys import load_error_keys
 from analysis.models import FailureLabel, ToolCall, TrialRecord, Turn, VerifierResult
 from analysis.parse_traces import HARNESS_PACKAGE_ROOT, load_tool_types
 from analysis.triage import (
@@ -25,6 +26,10 @@ from analysis.triage import (
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DATASETS_ROOT = REPO_ROOT / "datasets" / "tau3-bench"
+ERROR_KEYS = load_error_keys(
+    REPO_ROOT / HARNESS_PACKAGE_ROOT / "harness" / "retail" / "tools.py"
+)
+
 WRONG_EXCHANGE = "wrong_args.exchange_delivered_order_items.new_item_ids.wrong_variant"
 WRONG_RETURN = "wrong_args.return_delivered_order_items.item_ids.missing_items"
 
@@ -225,7 +230,7 @@ def test_matcher_anchors_on_order_id_across_two_same_tool_calls() -> None:
             {"order_id": "#B", "reason": "ordered by mistake"},
         ),
     ]
-    findings = match_gold(gold_actions, calls, [])
+    findings = match_gold(gold_actions, calls, ERROR_KEYS, [])
     assert [(f.label, f.evidence_turns, f.confidence) for f in findings] == [
         ("wrong_args.cancel_pending_order.reason", (3,), 1.0)
     ]
@@ -245,7 +250,7 @@ def test_matcher_unanchored_pairing_gets_lower_confidence() -> None:
             {"item_ids": ["1"], "new_item_ids": ["3"], "payment_method_id": "pm"},
         )
     ]
-    findings = match_gold(gold_actions, calls, [])
+    findings = match_gold(gold_actions, calls, ERROR_KEYS, [])
     assert [(f.label, f.confidence) for f in findings] == [
         ("wrong_args.modify_pending_order_items.new_item_ids.substituted", 0.8)
     ]
@@ -268,7 +273,7 @@ def test_matcher_upgrades_missing_to_attempted_but_rejected() -> None:
         )
     ]
     findings = match_gold(
-        [gold("exchange_delivered_order_items", arguments)], calls, []
+        [gold("exchange_delivered_order_items", arguments)], calls, ERROR_KEYS, []
     )
     assert [(f.label, f.evidence_turns) for f in findings] == [
         (
@@ -293,7 +298,7 @@ def test_matcher_compares_lists_as_multisets() -> None:
             {"order_id": "#A", "item_ids": ["3", "1", "2"], "payment_method_id": "pm"},
         )
     ]
-    assert match_gold(gold_actions, calls, []) == []
+    assert match_gold(gold_actions, calls, ERROR_KEYS, []) == []
 
 
 def test_matcher_flags_extra_write() -> None:
@@ -302,7 +307,7 @@ def test_matcher_flags_extra_write() -> None:
             6, "cancel_pending_order", {"order_id": "#A", "reason": "no longer needed"}
         )
     ]
-    findings = match_gold([], calls, [])
+    findings = match_gold([], calls, ERROR_KEYS, [])
     assert [(f.label, f.evidence_turns) for f in findings] == [
         ("extra_write.cancel_pending_order", (6,))
     ]
@@ -318,7 +323,7 @@ def test_matcher_honors_compare_args_restriction() -> None:
     calls = [
         make_call(2, "cancel_pending_order", {"order_id": "#A", "reason": "different"})
     ]
-    assert match_gold([action], calls, []) == []
+    assert match_gold([action], calls, ERROR_KEYS, []) == []
 
 
 def test_unrecognized_error_message_collected_not_crashed() -> None:
@@ -331,7 +336,7 @@ def test_unrecognized_error_message_collected_not_crashed() -> None:
     )
     record = make_record([call], passed=False)
     unrecognized: list[str] = []
-    triage_record(record, [], unrecognized)
+    triage_record(record, [], ERROR_KEYS, unrecognized)
     assert unrecognized == ["Flux capacitor misaligned"]
     by_label = {label.label: label for label in record.labels}
     assert set(by_label) == {"tool_error.cancel_pending_order.unrecognized"}
@@ -346,7 +351,7 @@ def test_matching_writes_on_failed_trial_yield_no_labels() -> None:
     record = make_record(
         [make_call(0, "cancel_pending_order", arguments)], passed=False
     )
-    triage_record(record, [gold("cancel_pending_order", arguments)], [])
+    triage_record(record, [gold("cancel_pending_order", arguments)], ERROR_KEYS, [])
     # Unexplained failures carry no labels; triage surfaces them in its summary
     # line rather than as a group.
     assert record.labels == []

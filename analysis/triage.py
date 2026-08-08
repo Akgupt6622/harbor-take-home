@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import Any
 
 from analysis import contracts
-from analysis.error_keys import match_error_key
+from analysis.error_keys import ErrorKeyTable, load_error_keys
 from analysis.models import FailureLabel, ToolCall, TrialRecord
 from analysis.parse_traces import HARNESS_PACKAGE_ROOT, load_tool_types
 
@@ -122,9 +122,11 @@ def values_equal(gold_value: object, agent_value: object) -> bool:
     return gold_value == agent_value
 
 
-def resolve_error_key(message: str, unrecognized: list[str]) -> str:
+def resolve_error_key(
+    message: str, error_keys: ErrorKeyTable, unrecognized: list[str]
+) -> str:
     try:
-        return match_error_key(message)
+        return error_keys.match(message)
     except LookupError:
         unrecognized.append(message)
         return UNRECOGNIZED_KEY
@@ -185,6 +187,7 @@ def classify_list_diff(
 def match_gold(
     gold_actions: Sequence[GoldAction],
     calls: Sequence[ToolCall],
+    error_keys: ErrorKeyTable,
     unrecognized: list[str],
     item_products: Mapping[str, str] | None = None,
 ) -> list[Finding]:
@@ -280,7 +283,9 @@ def match_gold(
                     rescue = call
             if rescue is not None:
                 pending_errors.remove(rescue)
-                key = resolve_error_key(rescue.error_msg or "", unrecognized)
+                key = resolve_error_key(
+                    rescue.error_msg or "", error_keys, unrecognized
+                )
                 findings.append(
                     Finding(
                         label=f"attempted_but_rejected.{name}.{key}",
@@ -354,6 +359,7 @@ def missed_communications(
 def triage_record(
     record: TrialRecord,
     gold_actions: Sequence[GoldAction],
+    error_keys: ErrorKeyTable,
     unrecognized: list[str],
     communicate_info: Sequence[str] = (),
     item_products: Mapping[str, str] | None = None,
@@ -368,7 +374,7 @@ def triage_record(
     for call in calls:
         if not call.is_error:
             continue
-        key = resolve_error_key(call.error_msg or "", unrecognized)
+        key = resolve_error_key(call.error_msg or "", error_keys, unrecognized)
         rule_labels.append(
             FailureLabel(
                 label=f"tool_error.{call.name}.{key}",
@@ -378,7 +384,7 @@ def triage_record(
                 confidence=1.0,
             )
         )
-    findings = match_gold(gold_actions, calls, unrecognized, item_products)
+    findings = match_gold(gold_actions, calls, error_keys, unrecognized, item_products)
     # Divergence findings on passed trials feed only fragile_pass: the verifier
     # compares DB end states, so a passed trial may legitimately diverge.
     if not passed:
@@ -486,15 +492,18 @@ def main(argv: list[str] | None = None) -> None:
         for line in tasks_path.read_text().splitlines()
     ]
     tool_types = load_tool_types(args.harness_root)
+    tools_path = args.harness_root / "harness" / "retail" / "tools.py"
+    error_keys = load_error_keys(tools_path)
     item_products = load_item_products(args.tau2_root)
     unrecognized: list[str] = []
     for record in records:
         if record.exception is not None:
-            triage_record(record, [], unrecognized)
+            triage_record(record, [], error_keys, unrecognized)
             continue
         triage_record(
             record,
             load_gold_actions(args.datasets_root, record.task_id, tool_types),
+            error_keys,
             unrecognized,
             communicate_info=load_communicate_info(args.datasets_root, record.task_id),
             item_products=item_products,
@@ -547,7 +556,10 @@ def main(argv: list[str] | None = None) -> None:
         print("=" * 72)
         for message in dict.fromkeys(unrecognized):
             print(f"  {message!r}")
-        print("regenerate the key table: uv run python -m analysis.gen_error_keys")
+        print(
+            f"these messages match no raise site in {tools_path}; "
+            "investigate before trusting the histogram"
+        )
         raise SystemExit(1)
 
 

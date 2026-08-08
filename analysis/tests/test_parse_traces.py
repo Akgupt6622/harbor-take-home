@@ -10,8 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from analysis.error_keys import match_error_key
-from analysis.gen_error_keys import build_table, extract_templates
+from analysis.error_keys import load_error_keys
 from analysis.models import TrialRecord
 from analysis.parse_traces import (
     HARNESS_PACKAGE_ROOT,
@@ -23,6 +22,7 @@ from analysis.parse_traces import (
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SMOKE_JOB_DIR = REPO_ROOT / "results" / "tau-retail" / "smoke"
 GOLDEN_DIR = Path(__file__).parent / "golden" / "smoke"
+TOOLS_PATH = REPO_ROOT / HARNESS_PACKAGE_ROOT / "harness" / "retail" / "tools.py"
 
 
 @pytest.fixture(scope="module")
@@ -51,9 +51,10 @@ def test_every_error_msg_has_a_key(smoke_records: list[TrialRecord]) -> None:
         if call.is_error
     ]
     assert error_msgs, "smoke set is expected to contain at least one tool error"
+    error_keys = load_error_keys(TOOLS_PATH)
     for msg in error_msgs:
         assert msg is not None
-        match_error_key(msg)
+        error_keys.match(msg)
 
 
 def test_write_flags_derived_from_source(smoke_records: list[TrialRecord]) -> None:
@@ -76,20 +77,6 @@ def test_golden_fixtures_byte_identical(
     ]
     for golden, fresh in zip(golden_files, fresh_files):
         assert fresh.read_bytes() == golden.read_bytes(), f"{golden.name} drifted"
-
-
-def test_error_keys_module_in_sync_with_source(tmp_path: Path) -> None:
-    templates = extract_templates(
-        REPO_ROOT / HARNESS_PACKAGE_ROOT / "harness" / "retail" / "tools.py"
-    )
-    rows = build_table(templates)
-    assert sum(count for _, _, count in rows) == 33
-    committed = (REPO_ROOT / "analysis" / "error_keys.py").read_text()
-    for key, pattern, _ in rows:
-        assert f"({key!r}, {pattern!r})" in committed, (
-            f"error_keys.py is stale for {key!r}; regenerate with "
-            "uv run python -m analysis.gen_error_keys"
-        )
 
 
 def test_records_roundtrip_through_json(smoke_records: list[TrialRecord]) -> None:
