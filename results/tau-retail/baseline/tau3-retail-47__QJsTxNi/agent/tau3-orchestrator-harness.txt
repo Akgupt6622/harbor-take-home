@@ -1,0 +1,105 @@
+2026-08-08 20:19:54.425 | WARNING  | tau2.utils.utils:<module>:14 - No .env file found
+2026-08-08 20:19:54.425 | INFO     | tau2.utils.utils:<module>:22 - Using data directory from environment: /opt/tau2-bench/data
+2026-08-08 20:19:55.353 | INFO     | tau2.voice.utils.utils:<module>:26 - Found 4 continuous noise files in the directory /opt/tau2-bench/data/voice/background_noise_audio_pcm_mono_verified/continuous
+2026-08-08 20:19:55.353 | INFO     | tau2.voice.utils.utils:<module>:33 - Found 5 burst noise files in the directory /opt/tau2-bench/data/voice/background_noise_audio_pcm_mono_verified/bursts
+2026-08-08 20:19:55.536 | INFO     | tau2.utils.llm_utils:<module>:102 - LiteLLM: Cache is disabled
+2026-08-08 20:19:55.851 | DEBUG    | tau2.registry:<module>:282 - Registering default components...
+2026-08-08 20:19:55.851 | DEBUG    | tau2.registry:<module>:344 - Default components registered successfully. Registry info: {
+  "domains": [
+    "mock",
+    "airline",
+    "retail",
+    "telecom",
+    "telecom-workflow",
+    "banking_knowledge"
+  ],
+  "agents": [
+    "llm_agent",
+    "llm_agent_gt",
+    "llm_agent_solo",
+    "discrete_time_audio_native_agent"
+  ],
+  "users": [
+    "user_simulator",
+    "dummy_user",
+    "voice_streaming_user_simulator"
+  ],
+  "task_sets": [
+    "mock",
+    "airline",
+    "retail",
+    "telecom_full",
+    "telecom_small",
+    "telecom",
+    "telecom-workflow",
+    "banking_knowledge"
+  ]
+}
+2026-08-08 20:19:56.133 | INFO     | tau2.orchestrator.orchestrator:_validate_mode_compatibility:477 - Orchestrator initialized in HALF_DUPLEX mode (turn-based) with agent=LLMAgent, user=UserSimulator
+2026-08-08 20:19:56.133 | WARNING  | tau2.agent.base.llm_config:set_seed:47 - Seed is already set to 626729, resetting it to 626729
+2026-08-08 20:19:56.133 | WARNING  | tau2.agent.base.llm_config:set_seed:47 - Seed is already set to 626729, resetting it to 626729
+2026-08-08 20:19:56.133 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 0. Sending message from Role.AGENT to Role.USER
+2026-08-08 20:19:56.134 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 0.
+From role: Role.AGENT
+To role: Role.USER
+Message: AssistantMessage
+content: Hi! How can I help you today?
+is_final_chunk: True
+2026-08-08 20:19:56.134 | DEBUG    | tau2.user.user_simulator:_generate_next_message:230 - User responds to message: AssistantMessage
+content: Hi! How can I help you today?
+is_final_chunk: True
+2026-08-08 20:19:59.071 | DEBUG    | tau2.user.user_simulator:_generate_next_message:252 - Response: Hi, I need to return an air purifier and a vacuum cleaner from a recent order. I’d like the refund processed as soon as possible.
+2026-08-08 20:19:59.071 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 1. Sending message from Role.USER to Role.AGENT
+2026-08-08 20:19:59.072 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 1.
+From role: Role.USER
+To role: Role.AGENT
+Message: UserMessage
+content: Hi, I need to return an air purifier and a vacuum cleaner from a recent order. I’d like the refund processed as soon as possible.
+is_final_chunk: True
+2026-08-08 20:20:01.039 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 2. Sending message from Role.AGENT to Role.USER
+2026-08-08 20:20:01.039 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 2.
+From role: Role.AGENT
+To role: Role.USER
+Message: AssistantMessage
+content: {"message":"Please provide the email address associated with your account so I can authenticate you and locate the order. If you prefer, provide your full name and ZIP code instead."}
+is_final_chunk: True
+2026-08-08 20:20:01.039 | DEBUG    | tau2.user.user_simulator:_generate_next_message:230 - User responds to message: AssistantMessage
+content: {"message":"Please provide the email address associated with your account so I can authenticate you and locate the order. If you prefer, provide your full name and ZIP code instead."}
+is_final_chunk: True
+2026-08-08 20:20:03.117 | DEBUG    | tau2.user.user_simulator:_generate_next_message:252 - Response: I don’t remember the email address. My account name is daiki_johnson_9523, and my ZIP code is 80273 in Denver.
+2026-08-08 20:20:03.117 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 3. Sending message from Role.USER to Role.AGENT
+2026-08-08 20:20:03.117 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 3.
+From role: Role.USER
+To role: Role.AGENT
+Message: UserMessage
+content: I don’t remember the email address. My account name is daiki_johnson_9523, and my ZIP code is 80273 in Denver.
+is_final_chunk: True
+2026-08-08 20:20:05.099 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 4. Sending message from Role.AGENT to Role.USER
+2026-08-08 20:20:05.099 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 4.
+From role: Role.AGENT
+To role: Role.USER
+Message: AssistantMessage
+content: {"message":"Please provide your first and last name as they appear on the account, along with ZIP code 80273, so I can authenticate you."}
+is_final_chunk: True
+2026-08-08 20:20:05.099 | DEBUG    | tau2.user.user_simulator:_generate_next_message:230 - User responds to message: AssistantMessage
+content: {"message":"Please provide your first and last name as they appear on the account, along with ZIP code 80273, so I can authenticate you."}
+is_final_chunk: True
+2026-08-08 20:20:07.301 | DEBUG    | tau2.user.user_simulator:_generate_next_message:252 - Response: I’m not sure of the full name exactly as it appears on the account. The username is daiki_johnson_9523, and the ZIP code is 80273. Can you authenticate me using those details?
+2026-08-08 20:20:07.301 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 5. Sending message from Role.USER to Role.AGENT
+2026-08-08 20:20:07.301 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 5.
+From role: Role.USER
+To role: Role.AGENT
+Message: UserMessage
+content: I’m not sure of the full name exactly as it appears on the account. The username is daiki_johnson_9523, and the ZIP code is 80273. Can you authenticate me using those details?
+is_final_chunk: True
+2026-08-08 20:20:08.946 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 6. Sending message from Role.AGENT to Role.USER
+2026-08-08 20:20:08.946 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 6.
+From role: Role.AGENT
+To role: Role.USER
+Message: AssistantMessage
+content: {"message":"I can’t authenticate an account using a username and ZIP code alone. Please provide the email address on the account, or the first and last name associated with ZIP code 80273."}
+is_final_chunk: True
+2026-08-08 20:20:08.946 | DEBUG    | tau2.user.user_simulator:_generate_next_message:230 - User responds to message: AssistantMessage
+content: {"message":"I can’t authenticate an account using a username and ZIP code alone. Please provide the email address on the account, or the first and last name associated with ZIP code 80273."}
+is_final_chunk: True
+2026-08-08 20:20:10.415 | DEBUG    | tau2.user.user_simulator:_generate_next_message:252 - Response: ###OUT-OF-SCOPE###
