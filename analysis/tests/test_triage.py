@@ -124,7 +124,7 @@ def test_smoke_retail_54_fragile_pass(tmp_path: Path) -> None:
     job_dir = run_triage(tmp_path, "smoke")
     record = load_records(job_dir)["tau3-retail-54"]
     assert record.fragile_pass is True
-    assert {label.label for label in record.labels} == {"tool_error.user_not_found"}
+    assert {label.label for label in record.labels} == {"tool_error.find_user_id_by_email.user_not_found"}
     index = contracts.load_index(job_dir / "triage" / "groups.json")
     # Passed trials never seed groups: the record keeps its tool_error label and
     # the fragile_pass flag, but no group references the task.
@@ -332,9 +332,9 @@ def test_unrecognized_error_message_collected_not_crashed() -> None:
     triage_record(record, [], unrecognized)
     assert unrecognized == ["Flux capacitor misaligned"]
     by_label = {label.label: label for label in record.labels}
-    assert set(by_label) == {"tool_error.unrecognized"}
+    assert set(by_label) == {"tool_error.cancel_pending_order.unrecognized"}
     assert (
-        "Flux capacitor misaligned" in by_label["tool_error.unrecognized"].explanation
+        "Flux capacitor misaligned" in by_label["tool_error.cancel_pending_order.unrecognized"].explanation
     )
 
 
@@ -370,7 +370,7 @@ def test_unrecognized_errors_exit_nonzero_after_writing(tmp_path: Path) -> None:
     assert (job_dir / "triage" / "groups.json").exists()
     record = load_records(job_dir)["tau3-retail-54"]
     unrecognized = [
-        label for label in record.labels if label.label == "tool_error.unrecognized"
+        label for label in record.labels if label.label == "tool_error.find_user_id_by_email.unrecognized"
     ]
     assert len(unrecognized) == 1
     assert "Gremlins ate the database" in unrecognized[0].explanation

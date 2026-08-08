@@ -260,7 +260,7 @@ def triage_record(
         key = resolve_error_key(call.error_msg or "", unrecognized)
         rule_labels.append(
             FailureLabel(
-                label=f"tool_error.{key}",
+                label=f"tool_error.{call.name}.{key}",
                 source="rule",
                 evidence_turns=[call.turn_idx],
                 explanation=f"{call.name} at turn {call.turn_idx} failed with {call.error_msg!r}.",

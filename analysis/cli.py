@@ -24,36 +24,86 @@ from analysis import contracts
 PREVIEW_TASK_IDS = 3
 
 
-def cmd_groups(index: contracts.TriageIndex) -> int:
+def tool_of(group_id: str) -> str:
+    """Group ids follow <type>.<tool>[.<qualifier>]; the tool is segment 1."""
+    return group_id.split(".")[1]
+
+
+def _print_table(header: tuple[str, ...], rows: list[tuple[str, ...]]) -> None:
+    widths = [
+        max(len(row[i]) for row in (header, *rows)) for i in range(len(header) - 1)
+    ]
+    for row in (header, *rows):
+        cells = [cell.ljust(width) for cell, width in zip(row[:-1], widths)]
+        print(" | ".join((*cells, row[-1])))
+
+
+def _preview(task_ids: tuple[str, ...]) -> str:
+    preview = ", ".join(task_ids[:PREVIEW_TASK_IDS])
+    if len(task_ids) > PREVIEW_TASK_IDS:
+        preview += f" (+{len(task_ids) - PREVIEW_TASK_IDS} more)"
+    return preview
+
+
+def cmd_groups(index: contracts.TriageIndex, by_tool: bool) -> int:
     totals = index.totals
     print(
         f"{index.job_name}: {totals.passed}/{totals.trials} passed, "
         f"{totals.failed} failed, {totals.errored} errored"
     )
     print()
-    membership: dict[str, set[str]] = {}
+    if by_tool:
+        families: dict[str, list[contracts.Group]] = {}
+        for group in index.groups:
+            families.setdefault(tool_of(group.group_id), []).append(group)
+        family_tasks = {
+            tool: tuple(sorted({t for g in groups for t in g.task_ids}))
+            for tool, groups in families.items()
+        }
+        membership: dict[str, set[str]] = {}
+        for tool, task_ids in family_tasks.items():
+            for task_id in task_ids:
+                membership.setdefault(task_id, set()).add(tool)
+        rows = [
+            (
+                tool,
+                str(len(families[tool])),
+                str(len(family_tasks[tool])),
+                str(
+                    sum(
+                        1
+                        for task_id in family_tasks[tool]
+                        if membership[task_id] == {tool}
+                    )
+                ),
+                _preview(family_tasks[tool]),
+            )
+            for tool in sorted(families, key=lambda t: (-len(family_tasks[t]), t))
+        ]
+        _print_table(("tool", "n_groups", "n_tasks", "n_solo", "tasks"), rows)
+        return 0
+    membership = {}
     for group in index.groups:
         for task_id in group.task_ids:
             membership.setdefault(task_id, set()).add(group.group_id)
-    rows: list[tuple[str, str, str, str, str]] = []
+    rows = []
     # Groups arrive pre-sorted by (-len(tasks), group_id); never re-sort.
     for group in index.groups:
-        preview = ", ".join(group.task_ids[:PREVIEW_TASK_IDS])
-        if len(group.task_ids) > PREVIEW_TASK_IDS:
-            preview += f" (+{len(group.task_ids) - PREVIEW_TASK_IDS} more)"
         # solo: this group is the task's only diagnosis, so fixing it alone
         # should flip the task — the fix-priority signal.
         n_solo = sum(
             1 for task_id in group.task_ids if membership[task_id] == {group.group_id}
         )
         rows.append(
-            (group.group_id, group.kind, str(len(group.tasks)), str(n_solo), preview)
+            (
+                group.group_id,
+                group.kind,
+                str(len(group.tasks)),
+                str(n_solo),
+                _preview(group.task_ids),
+            )
         )
-    header = ("group_id", "kind", "n_tasks", "n_solo", "tasks")
-    widths = [max(len(row[i]) for row in (header, *rows)) for i in range(4)]
-    for row in (header, *rows):
-        cells = [cell.ljust(width) for cell, width in zip(row[:4], widths)]
-        print(" | ".join((*cells, row[4])))
+    _print_table(("group_id", "kind", "n_tasks", "n_solo", "tasks"), rows)
     return 0
 
 
@@ -222,6 +272,11 @@ def main(
         "groups", help="print totals and the ranked group table"
     )
     groups_parser.add_argument("job_dir", type=Path)
+    groups_parser.add_argument(
+        "--by-tool",
+        action="store_true",
+        help="roll groups up into per-tool families",
+    )
 
     show_parser = sub.add_parser(
         "show", help="print a group's tasks and attempt evidence"
@@ -240,7 +295,12 @@ def main(
     compose_parser.add_argument("job_dir", type=Path)
     compose_parser.add_argument("name")
     compose_parser.add_argument(
-        "--groups", required=True, help="comma-separated group ids"
+        "--groups", default="", help="comma-separated group ids"
+    )
+    compose_parser.add_argument(
+        "--tools",
+        default="",
+        help="comma-separated tool names; selects every group of those tools",
     )
     compose_parser.add_argument("--controls", type=int, default=None)
     compose_parser.add_argument("--seed", type=int, default=None)
@@ -267,10 +327,29 @@ def main(
         return 2
     index = contracts.load_index(groups_path)
     if args.command == "groups":
-        return cmd_groups(index)
+        return cmd_groups(index, args.by_tool)
     if args.command == "show":
         return cmd_show(index, args.group_id, args.transcript, root)
     group_ids = tuple(gid for gid in args.groups.split(",") if gid)
+    tools = tuple(tool for tool in args.tools.split(",") if tool)
+    if tools:
+        valid_tools = {tool_of(group.group_id) for group in index.groups}
+        unknown_tools = [tool for tool in tools if tool not in valid_tools]
+        if unknown_tools:
+            print(
+                f"error: unknown tool(s) {', '.join(unknown_tools)}; "
+                f"valid tools: {', '.join(sorted(valid_tools))}",
+                file=sys.stderr,
+            )
+            return 2
+        group_ids += tuple(
+            group.group_id
+            for group in index.groups
+            if tool_of(group.group_id) in tools and group.group_id not in group_ids
+        )
+    if not group_ids:
+        print("error: provide --groups and/or --tools", file=sys.stderr)
+        return 2
     return cmd_compose(
         index, job_dir, args.name, group_ids, args.controls, args.seed, args.force, root
     )
