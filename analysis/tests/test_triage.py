@@ -124,38 +124,27 @@ def test_smoke_retail_54_fragile_pass(tmp_path: Path) -> None:
     job_dir = run_triage(tmp_path, "smoke")
     record = load_records(job_dir)["tau3-retail-54"]
     assert record.fragile_pass is True
-    assert {label.label for label in record.labels} == {
-        "tool_error.user_not_found",
-        "fragile_pass",
-    }
+    assert {label.label for label in record.labels} == {"tool_error.user_not_found"}
     index = contracts.load_index(job_dir / "triage" / "groups.json")
-    assert index.group("fragile_pass").task_ids == ("tau3-retail-54",)
+    # Passed trials never seed groups: the record keeps its tool_error label and
+    # the fragile_pass flag, but no group references the task.
     for group in index.groups:
-        if group.kind == "divergence":
-            assert "tau3-retail-54" not in group.task_ids
-    # Passed trials never seed tool_error groups; fragile_pass is their only group.
-    assert "tool_error.user_not_found" not in {g.group_id for g in index.groups}
+        assert "tau3-retail-54" not in group.task_ids
 
 
 def test_smoke_index_and_contract_roundtrip(tmp_path: Path) -> None:
     job_dir = run_triage(tmp_path, "smoke")
     index = contracts.load_index(job_dir / "triage" / "groups.json")
-    assert [group.group_id for group in index.groups] == [
-        "fragile_pass",
-        WRONG_EXCHANGE,
-    ]
+    assert [group.group_id for group in index.groups] == [WRONG_EXCHANGE]
     assert index.totals == contracts.Totals(trials=5, passed=4, failed=1, errored=0)
-    assert index.group("fragile_pass").kind == "behavior"
     assert index.group(WRONG_EXCHANGE).kind == "divergence"
-    (ref,) = index.group("fragile_pass").tasks
+    (ref,) = index.group(WRONG_EXCHANGE).tasks
     (attempt,) = ref.attempts
-    assert attempt.attempt_key == "SB33V7b"
-    assert attempt.evidence_turns == (4,)
+    assert attempt.attempt_key == "v29PA5V"
+    assert attempt.evidence_turns == (22,)
     assert Path(attempt.transcript).exists()
     records = load_records(job_dir)
-    assert {label.label for label in records["tau3-retail-65"].labels} == {
-        "transferred_to_human"
-    }
+    assert records["tau3-retail-65"].labels == []
     assert records["tau3-retail-65"].fragile_pass is False
 
 
@@ -165,11 +154,9 @@ def test_pipecheck_retail_91_labels_and_groups(tmp_path: Path) -> None:
     assert {label.label for label in record.labels if label.source == "rule"} == {
         WRONG_RETURN,
         WRONG_EXCHANGE,
-        "transferred_to_human",
     }
     index = contracts.load_index(job_dir / "triage" / "groups.json")
     assert [group.group_id for group in index.groups] == [
-        "transferred_to_human",
         WRONG_EXCHANGE,
         WRONG_RETURN,
     ]
@@ -351,15 +338,15 @@ def test_unrecognized_error_message_collected_not_crashed() -> None:
     )
 
 
-def test_writes_match_but_failed_routes_to_llm_layer() -> None:
+def test_matching_writes_on_failed_trial_yield_no_labels() -> None:
     arguments = {"order_id": "#A", "reason": "no longer needed"}
     record = make_record(
         [make_call(0, "cancel_pending_order", arguments)], passed=False
     )
     triage_record(record, [gold("cancel_pending_order", arguments)], [])
-    (label,) = record.labels
-    assert label.label == "writes_match_but_failed"
-    assert label.evidence_turns == []
+    # Unexplained failures carry no labels; triage surfaces them in its summary
+    # line rather than as a group.
+    assert record.labels == []
 
 
 def test_unrecognized_errors_exit_nonzero_after_writing(tmp_path: Path) -> None:

@@ -27,8 +27,6 @@ from analysis.parse_traces import HARNESS_PACKAGE_ROOT, load_tool_types
 
 DEFAULT_DATASETS_ROOT = Path("datasets/tau3-bench")
 ANCHOR_FIELD = "order_id"
-TRANSFER_TOOL = "transfer_to_human_agents"
-TRANSFER_SENTINEL = "###TRANSFER###"
 UNRECOGNIZED_KEY = "unrecognized"
 ANCHORED_CONFIDENCE = 1.0
 UNANCHORED_CONFIDENCE = 0.8
@@ -283,103 +281,21 @@ def triage_record(
             )
             for finding in findings
         )
-        if not rule_labels:
-            rule_labels.append(
-                FailureLabel(
-                    label="writes_match_but_failed",
-                    source="rule",
-                    evidence_turns=[],
-                    explanation=(
-                        "Trial failed with no tool errors and no gold write "
-                        "divergence; needs LLM review."
-                    ),
-                    confidence=1.0,
-                )
-            )
-    user_turns = [turn for turn in record.turns if turn.role == "user"]
-    transfer_turns = {call.turn_idx for call in calls if call.name == TRANSFER_TOOL}
-    if user_turns and user_turns[-1].content == TRANSFER_SENTINEL:
-        transfer_turns.add(user_turns[-1].idx)
-    if transfer_turns:
-        rule_labels.append(
-            FailureLabel(
-                label="transferred_to_human",
-                source="rule",
-                evidence_turns=sorted(transfer_turns),
-                explanation=(
-                    f"Agent escalated to a human ({TRANSFER_TOOL} call and/or "
-                    f"{TRANSFER_SENTINEL} stop)."
-                ),
-                confidence=1.0,
-            )
-        )
-    if record.termination_reason not in (None, "user_stop"):
-        rule_labels.append(
-            FailureLabel(
-                label="premature_termination",
-                source="rule",
-                evidence_turns=[],
-                explanation=(
-                    f"Trial terminated with reason {record.termination_reason!r} "
-                    "instead of user_stop."
-                ),
-                confidence=1.0,
-            )
-        )
-    if (
-        gold_actions
-        and not passed
-        and not any(call.is_write and not call.is_error for call in calls)
-    ):
-        rule_labels.append(
-            FailureLabel(
-                label="no_writes_when_expected",
-                source="rule",
-                evidence_turns=[],
-                explanation=(
-                    f"Gold expects {len(gold_actions)} write action(s) but the "
-                    "trial made no successful write."
-                ),
-                confidence=1.0,
-            )
-        )
     if passed and (findings or any(call.is_error for call in calls)):
         record.fragile_pass = True
-        evidence = sorted(
-            {
-                turn
-                for label in rule_labels
-                if label.label.startswith("tool_error.")
-                for turn in label.evidence_turns
-            }
-            | {turn for finding in findings for turn in finding.evidence_turns}
-        )
-        rule_labels.append(
-            FailureLabel(
-                label="fragile_pass",
-                source="rule",
-                evidence_turns=evidence,
-                explanation=(
-                    f"Trial passed despite "
-                    f"{sum(1 for call in calls if call.is_error)} tool error(s) "
-                    f"and {len(findings)} gold divergence finding(s)."
-                ),
-                confidence=1.0,
-            )
-        )
     record.labels.extend(rule_labels)
 
 
 def build_index(job_dir: Path, records: Sequence[TrialRecord]) -> contracts.TriageIndex:
-    """Failed trials contribute every rule label; passed trials only fragile_pass."""
+    """Groups come from failed trials only; passed trials carry at most fragile_pass."""
     membership: dict[str, dict[str, dict[str, set[int]]]] = {}
     for record in records:
         if record.exception is not None or record.verifier is None:
             continue
+        if record.verifier.passed:
+            continue
         for label in record.labels:
             if label.source != "rule":
-                continue
-            if record.verifier.passed and label.label != "fragile_pass":
                 continue
             attempts = membership.setdefault(label.label, {}).setdefault(
                 record.task_id, {}
@@ -387,13 +303,12 @@ def build_index(job_dir: Path, records: Sequence[TrialRecord]) -> contracts.Tria
             attempts.setdefault(record.attempt_key, set()).update(label.evidence_turns)
     groups: list[contracts.Group] = []
     for group_id, tasks in membership.items():
-        kind: contracts.GroupKind = (
-            "tool_error"
-            if group_id.startswith("tool_error.")
-            else "divergence"
-            if group_id.startswith(DIVERGENCE_PREFIXES)
-            else "behavior"
-        )
+        if group_id.startswith("tool_error."):
+            kind: contracts.GroupKind = "tool_error"
+        elif group_id.startswith(DIVERGENCE_PREFIXES):
+            kind = "divergence"
+        else:
+            raise ValueError(f"rule label {group_id!r} has no known group kind")
         groups.append(
             contracts.Group(
                 group_id=group_id,
@@ -490,6 +405,17 @@ def main(argv: list[str] | None = None) -> None:
             f"n_solo={n_solo}  [{', '.join(group.task_ids)}]"
         )
     totals = index.totals
+    grouped_tasks = {task_id for group in index.groups for task_id in group.task_ids}
+    unexplained = sorted(
+        record.task_id
+        for record in records
+        if record.exception is None
+        and record.verifier is not None
+        and not record.verifier.passed
+        and record.task_id not in grouped_tasks
+    )
+    if unexplained:
+        print(f"unexplained failures (no groups): [{', '.join(unexplained)}]")
     suffix = " (check only, nothing written)" if args.check else f" -> {groups_path}"
     print(
         f"{index.job_name}: {totals.trials} trials — {totals.passed} passed, "

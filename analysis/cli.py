@@ -31,18 +31,29 @@ def cmd_groups(index: contracts.TriageIndex) -> int:
         f"{totals.failed} failed, {totals.errored} errored"
     )
     print()
-    rows: list[tuple[str, str, str, str]] = []
+    membership: dict[str, set[str]] = {}
+    for group in index.groups:
+        for task_id in group.task_ids:
+            membership.setdefault(task_id, set()).add(group.group_id)
+    rows: list[tuple[str, str, str, str, str]] = []
     # Groups arrive pre-sorted by (-len(tasks), group_id); never re-sort.
     for group in index.groups:
         preview = ", ".join(group.task_ids[:PREVIEW_TASK_IDS])
         if len(group.task_ids) > PREVIEW_TASK_IDS:
             preview += f" (+{len(group.task_ids) - PREVIEW_TASK_IDS} more)"
-        rows.append((group.group_id, group.kind, str(len(group.tasks)), preview))
-    header = ("group_id", "kind", "n_tasks", "tasks")
-    widths = [max(len(row[i]) for row in (header, *rows)) for i in range(3)]
+        # solo: this group is the task's only diagnosis, so fixing it alone
+        # should flip the task — the fix-priority signal.
+        n_solo = sum(
+            1 for task_id in group.task_ids if membership[task_id] == {group.group_id}
+        )
+        rows.append(
+            (group.group_id, group.kind, str(len(group.tasks)), str(n_solo), preview)
+        )
+    header = ("group_id", "kind", "n_tasks", "n_solo", "tasks")
+    widths = [max(len(row[i]) for row in (header, *rows)) for i in range(4)]
     for row in (header, *rows):
-        cells = [cell.ljust(width) for cell, width in zip(row[:3], widths)]
-        print(" | ".join((*cells, row[3])))
+        cells = [cell.ljust(width) for cell, width in zip(row[:4], widths)]
+        print(" | ".join((*cells, row[4])))
     return 0
 
 
