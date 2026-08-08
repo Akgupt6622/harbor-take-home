@@ -25,8 +25,8 @@ from analysis.triage import (
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DATASETS_ROOT = REPO_ROOT / "datasets" / "tau3-bench"
-WRONG_EXCHANGE = "wrong_args.exchange_delivered_order_items.new_item_ids"
-WRONG_RETURN = "wrong_args.return_delivered_order_items.item_ids"
+WRONG_EXCHANGE = "wrong_args.exchange_delivered_order_items.new_item_ids.wrong_variant"
+WRONG_RETURN = "wrong_args.return_delivered_order_items.item_ids.missing_items"
 
 
 def run_triage(tmp_path: Path, job: str) -> Path:
@@ -124,7 +124,9 @@ def test_smoke_retail_54_fragile_pass(tmp_path: Path) -> None:
     job_dir = run_triage(tmp_path, "smoke")
     record = load_records(job_dir)["tau3-retail-54"]
     assert record.fragile_pass is True
-    assert {label.label for label in record.labels} == {"tool_error.find_user_id_by_email.user_not_found"}
+    assert {label.label for label in record.labels} == {
+        "tool_error.find_user_id_by_email.user_not_found"
+    }
     index = contracts.load_index(job_dir / "triage" / "groups.json")
     # Passed trials never seed groups: the record keeps its tool_error label and
     # the fragile_pass flag, but no group references the task.
@@ -245,7 +247,7 @@ def test_matcher_unanchored_pairing_gets_lower_confidence() -> None:
     ]
     findings = match_gold(gold_actions, calls, [])
     assert [(f.label, f.confidence) for f in findings] == [
-        ("wrong_args.modify_pending_order_items.new_item_ids", 0.8)
+        ("wrong_args.modify_pending_order_items.new_item_ids.substituted", 0.8)
     ]
 
 
@@ -334,7 +336,8 @@ def test_unrecognized_error_message_collected_not_crashed() -> None:
     by_label = {label.label: label for label in record.labels}
     assert set(by_label) == {"tool_error.cancel_pending_order.unrecognized"}
     assert (
-        "Flux capacitor misaligned" in by_label["tool_error.cancel_pending_order.unrecognized"].explanation
+        "Flux capacitor misaligned"
+        in by_label["tool_error.cancel_pending_order.unrecognized"].explanation
     )
 
 
@@ -370,7 +373,9 @@ def test_unrecognized_errors_exit_nonzero_after_writing(tmp_path: Path) -> None:
     assert (job_dir / "triage" / "groups.json").exists()
     record = load_records(job_dir)["tau3-retail-54"]
     unrecognized = [
-        label for label in record.labels if label.label == "tool_error.find_user_id_by_email.unrecognized"
+        label
+        for label in record.labels
+        if label.label == "tool_error.find_user_id_by_email.unrecognized"
     ]
     assert len(unrecognized) == 1
     assert "Gremlins ate the database" in unrecognized[0].explanation
@@ -412,3 +417,39 @@ def test_gold_loader_keeps_only_write_actions() -> None:
         "cancel_pending_order",
         "return_delivered_order_items",
     ]
+
+
+def test_list_diff_subclassification() -> None:
+    from analysis.triage import classify_list_diff
+
+    catalog = {"a1": "P1", "a2": "P1", "b1": "P2"}
+    assert classify_list_diff(["a1", "a2"], ["a1"], None) == "missing_items"
+    assert classify_list_diff(["a1"], ["a1", "b1"], None) == "extra_items"
+    assert classify_list_diff(["a1"], ["a2"], None) == "substituted"
+    assert classify_list_diff(["a1"], ["a2"], catalog) == "wrong_variant"
+    assert classify_list_diff(["a1"], ["b1"], catalog) == "unrelated_item"
+    assert classify_list_diff(["a1"], ["zz"], catalog) == "substituted"
+    assert classify_list_diff(["a1", "a2"], ["b1"], catalog) == "mixed"
+
+
+def test_missing_communication_mirrors_tau2_matching() -> None:
+    from analysis.triage import missed_communications
+
+    record = make_record([], passed=False)
+    record.turns = [
+        Turn(
+            idx=0,
+            role="assistant",
+            content="Your refund totals $8,276.23 today.",
+            ts="t",
+        ),
+        Turn(idx=1, role="user", content="thanks 54.04", ts="t"),
+        Turn(idx=2, role="assistant", content="Anything else?", ts="t"),
+    ]
+    labels = missed_communications(record, ["8276.23", "54.04", "Polyester"])
+    assert [label.label for label in labels] == [
+        "missing_communication.54_04",
+        "missing_communication.polyester",
+    ]
+    assert all(label.evidence_turns == [2] for label in labels)
+    assert "54.04" in labels[0].explanation

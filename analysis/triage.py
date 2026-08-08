@@ -6,15 +6,24 @@ Recomputes source=="rule" labels idempotently (llm/human labels survive),
 rewrites runs/<job>/tasks.jsonl in parse_traces.write_outputs format, and dumps
 the TriageIndex to runs/<job>/triage/groups.json through the frozen contract.
 
-Gold expected_actions include READ/GENERIC calls, but reward_basis is DB end
-state, so only WRITE actions can explain a divergence: the matcher diffs gold
-WRITE actions against successful write calls and ignores the rest.
+Gold expected_actions include READ/GENERIC calls, but no retail task grades on
+action matching directly: reward_basis is DB end state (+ NL assertions), so
+only WRITE actions can explain a DB divergence — the matcher diffs gold WRITE
+actions against successful write calls and ignores the rest.
+
+The NL side: no retail task has COMMUNICATE in its reward_basis; the benchmark
+compiled expected_communicate_info into gpt-5.2-judged nl_assertions instead.
+The missing_communication labels mirror tau2's CommunicateEvaluator matching
+(case-insensitive substring, commas stripped from the message) as a
+deterministic PROXY for that sanitized NL-judge verdict.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -26,6 +35,7 @@ from analysis.models import FailureLabel, ToolCall, TrialRecord
 from analysis.parse_traces import HARNESS_PACKAGE_ROOT, load_tool_types
 
 DEFAULT_DATASETS_ROOT = Path("datasets/tau3-bench")
+DEFAULT_TAU2_ROOT = Path(os.getenv("TAU2_BENCH_ROOT", "../tau2-bench"))
 ANCHOR_FIELD = "order_id"
 UNRECOGNIZED_KEY = "unrecognized"
 ANCHORED_CONFIDENCE = 1.0
@@ -35,6 +45,7 @@ DIVERGENCE_PREFIXES = (
     "missing_action.",
     "extra_write.",
     "attempted_but_rejected.",
+    "missing_communication.",
 )
 
 
@@ -95,6 +106,13 @@ def load_gold_actions(
     return actions
 
 
+def load_communicate_info(datasets_root: Path, task_id: str) -> list[str]:
+    config_path = datasets_root / task_id / "tests" / "config.json"
+    if not config_path.exists():
+        raise FileNotFoundError(f"{task_id}: no gold config at {config_path}")
+    return list(json.loads(config_path.read_text())["expected_communicate_info"] or [])
+
+
 def values_equal(gold_value: object, agent_value: object) -> bool:
     if isinstance(gold_value, list) and isinstance(agent_value, list):
         # Gold list order is not part of the contract: compare as multisets.
@@ -112,10 +130,63 @@ def resolve_error_key(message: str, unrecognized: list[str]) -> str:
         return UNRECOGNIZED_KEY
 
 
+def load_item_products(tau2_root: Path) -> dict[str, str] | None:
+    """item_id -> product_id from the tau2 retail catalog; None when unavailable."""
+    db_path = tau2_root / "data" / "tau2" / "domains" / "retail" / "db.json"
+    if not db_path.is_file():
+        return None
+    return {
+        item_id: product["product_id"]
+        for product in json.loads(db_path.read_text())["products"].values()
+        for item_id in product["variants"]
+    }
+
+
+def classify_list_diff(
+    gold_value: list[Any],
+    agent_value: list[Any],
+    item_products: Mapping[str, str] | None,
+) -> str:
+    def multiset(values: list[Any]) -> dict[str, int]:
+        counts: dict[str, int] = {}
+        for value in values:
+            key = json.dumps(value, sort_keys=True)
+            counts[key] = counts.get(key, 0) + 1
+        return counts
+
+    gold_counts, agent_counts = multiset(gold_value), multiset(agent_value)
+    gold_only = [
+        json.loads(key)
+        for key, count in gold_counts.items()
+        for _ in range(count - agent_counts.get(key, 0))
+        if count > agent_counts.get(key, 0)
+    ]
+    agent_only = [
+        json.loads(key)
+        for key, count in agent_counts.items()
+        for _ in range(count - gold_counts.get(key, 0))
+        if count > gold_counts.get(key, 0)
+    ]
+    if gold_only and not agent_only:
+        return "missing_items"
+    if agent_only and not gold_only:
+        return "extra_items"
+    if len(gold_value) == len(agent_value):
+        swapped = [*gold_only, *agent_only]
+        if item_products is not None and all(
+            isinstance(item, str) and item in item_products for item in swapped
+        ):
+            products = {item_products[item] for item in swapped}
+            return "wrong_variant" if len(products) == 1 else "unrelated_item"
+        return "substituted"
+    return "mixed"
+
+
 def match_gold(
     gold_actions: Sequence[GoldAction],
     calls: Sequence[ToolCall],
     unrecognized: list[str],
+    item_products: Mapping[str, str] | None = None,
 ) -> list[Finding]:
     writes = [call for call in calls if call.is_write and not call.is_error]
     findings: list[Finding] = []
@@ -175,15 +246,22 @@ def match_gold(
                 else tuple(action.arguments)
             )
             for field in fields:
-                if values_equal(action.arguments.get(field), call.args.get(field)):
+                gold_value = action.arguments.get(field)
+                agent_value = call.args.get(field)
+                if values_equal(gold_value, agent_value):
                     continue
+                label = f"wrong_args.{name}.{field}"
+                if isinstance(gold_value, list) and isinstance(agent_value, list):
+                    label += (
+                        f".{classify_list_diff(gold_value, agent_value, item_products)}"
+                    )
                 findings.append(
                     Finding(
-                        label=f"wrong_args.{name}.{field}",
+                        label=label,
                         evidence_turns=(call.turn_idx,),
                         explanation=(
-                            f"{name}: agent used {field}={call.args.get(field)!r}, "
-                            f"gold expects {action.arguments.get(field)!r}."
+                            f"{name}: agent used {field}={agent_value!r}, "
+                            f"gold expects {gold_value!r}."
                         ),
                         confidence=confidence,
                     )
@@ -242,10 +320,43 @@ def match_gold(
     return findings
 
 
+def communicate_key(info: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", info.lower()).strip("_")[:32] or "empty"
+
+
+def missed_communications(
+    record: TrialRecord, communicate_info: Sequence[str]
+) -> list[FailureLabel]:
+    # Mirrors tau2's CommunicateEvaluator: case-insensitive substring, commas
+    # stripped from the message. A deterministic proxy for the NL-judge verdict.
+    assistant_turns = [
+        (turn.idx, turn.content.lower().replace(",", ""))
+        for turn in record.turns
+        if turn.role == "assistant" and turn.content
+    ]
+    evidence = [assistant_turns[-1][0]] if assistant_turns else []
+    return [
+        FailureLabel(
+            label=f"missing_communication.{communicate_key(info)}",
+            source="rule",
+            evidence_turns=evidence,
+            explanation=(
+                f"Expected info {info!r} does not appear in any assistant message "
+                "(proxy for the NL-assertion judge)."
+            ),
+            confidence=1.0,
+        )
+        for info in communicate_info
+        if not any(info.lower() in text for _, text in assistant_turns)
+    ]
+
+
 def triage_record(
     record: TrialRecord,
     gold_actions: Sequence[GoldAction],
     unrecognized: list[str],
+    communicate_info: Sequence[str] = (),
+    item_products: Mapping[str, str] | None = None,
 ) -> None:
     record.labels = [label for label in record.labels if label.source != "rule"]
     record.fragile_pass = False
@@ -267,7 +378,7 @@ def triage_record(
                 confidence=1.0,
             )
         )
-    findings = match_gold(gold_actions, calls, unrecognized)
+    findings = match_gold(gold_actions, calls, unrecognized, item_products)
     # Divergence findings on passed trials feed only fragile_pass: the verifier
     # compares DB end states, so a passed trial may legitimately diverge.
     if not passed:
@@ -281,6 +392,7 @@ def triage_record(
             )
             for finding in findings
         )
+        rule_labels.extend(missed_communications(record, communicate_info))
     if passed and (findings or any(call.is_error for call in calls)):
         record.fragile_pass = True
     record.labels.extend(rule_labels)
@@ -362,6 +474,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("job_dir", type=Path, help="runs/<job> dir with tasks.jsonl")
     parser.add_argument("--datasets-root", type=Path, default=DEFAULT_DATASETS_ROOT)
     parser.add_argument("--harness-root", type=Path, default=HARNESS_PACKAGE_ROOT)
+    parser.add_argument("--tau2-root", type=Path, default=DEFAULT_TAU2_ROOT)
     parser.add_argument(
         "--check", action="store_true", help="validate only, write nothing"
     )
@@ -373,14 +486,19 @@ def main(argv: list[str] | None = None) -> None:
         for line in tasks_path.read_text().splitlines()
     ]
     tool_types = load_tool_types(args.harness_root)
+    item_products = load_item_products(args.tau2_root)
     unrecognized: list[str] = []
     for record in records:
-        gold_actions: list[GoldAction] = (
-            []
-            if record.exception is not None
-            else load_gold_actions(args.datasets_root, record.task_id, tool_types)
+        if record.exception is not None:
+            triage_record(record, [], unrecognized)
+            continue
+        triage_record(
+            record,
+            load_gold_actions(args.datasets_root, record.task_id, tool_types),
+            unrecognized,
+            communicate_info=load_communicate_info(args.datasets_root, record.task_id),
+            item_products=item_products,
         )
-        triage_record(record, gold_actions, unrecognized)
     index = build_index(args.job_dir, records)
 
     groups_path = contracts.triage_dir(args.job_dir) / contracts.GROUPS_FILENAME

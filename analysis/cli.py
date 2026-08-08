@@ -25,7 +25,13 @@ PREVIEW_TASK_IDS = 3
 
 
 def tool_of(group_id: str) -> str:
-    """Group ids follow <type>.<tool>[.<qualifier>]; the tool is segment 1."""
+    """Group ids follow <type>.<tool>[.<qualifier>]; the tool is segment 1.
+
+    missing_communication.<key> labels have no tool; they roll up into a
+    synthetic 'communicate' family.
+    """
+    if group_id.startswith("missing_communication."):
+        return "communicate"
     return group_id.split(".")[1]
 
 
