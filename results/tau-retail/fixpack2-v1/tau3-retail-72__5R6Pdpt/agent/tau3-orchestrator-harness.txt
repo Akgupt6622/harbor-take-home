@@ -1,0 +1,136 @@
+2026-08-08 23:47:33.514 | WARNING  | tau2.utils.utils:<module>:14 - No .env file found
+2026-08-08 23:47:33.514 | INFO     | tau2.utils.utils:<module>:22 - Using data directory from environment: /opt/tau2-bench/data
+2026-08-08 23:47:34.177 | INFO     | tau2.voice.utils.utils:<module>:26 - Found 4 continuous noise files in the directory /opt/tau2-bench/data/voice/background_noise_audio_pcm_mono_verified/continuous
+2026-08-08 23:47:34.177 | INFO     | tau2.voice.utils.utils:<module>:33 - Found 5 burst noise files in the directory /opt/tau2-bench/data/voice/background_noise_audio_pcm_mono_verified/bursts
+2026-08-08 23:47:34.294 | INFO     | tau2.utils.llm_utils:<module>:102 - LiteLLM: Cache is disabled
+2026-08-08 23:47:34.496 | DEBUG    | tau2.registry:<module>:282 - Registering default components...
+2026-08-08 23:47:34.496 | DEBUG    | tau2.registry:<module>:344 - Default components registered successfully. Registry info: {
+  "domains": [
+    "mock",
+    "airline",
+    "retail",
+    "telecom",
+    "telecom-workflow",
+    "banking_knowledge"
+  ],
+  "agents": [
+    "llm_agent",
+    "llm_agent_gt",
+    "llm_agent_solo",
+    "discrete_time_audio_native_agent"
+  ],
+  "users": [
+    "user_simulator",
+    "dummy_user",
+    "voice_streaming_user_simulator"
+  ],
+  "task_sets": [
+    "mock",
+    "airline",
+    "retail",
+    "telecom_full",
+    "telecom_small",
+    "telecom",
+    "telecom-workflow",
+    "banking_knowledge"
+  ]
+}
+2026-08-08 23:47:34.780 | INFO     | tau2.orchestrator.orchestrator:_validate_mode_compatibility:477 - Orchestrator initialized in HALF_DUPLEX mode (turn-based) with agent=LLMAgent, user=UserSimulator
+2026-08-08 23:47:34.780 | WARNING  | tau2.agent.base.llm_config:set_seed:47 - Seed is already set to 626729, resetting it to 626729
+2026-08-08 23:47:34.780 | WARNING  | tau2.agent.base.llm_config:set_seed:47 - Seed is already set to 626729, resetting it to 626729
+2026-08-08 23:47:34.781 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 0. Sending message from Role.AGENT to Role.USER
+2026-08-08 23:47:34.781 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 0.
+From role: Role.AGENT
+To role: Role.USER
+Message: AssistantMessage
+content: Hi! How can I help you today?
+is_final_chunk: True
+2026-08-08 23:47:34.781 | DEBUG    | tau2.user.user_simulator:_generate_next_message:230 - User responds to message: AssistantMessage
+content: Hi! How can I help you today?
+is_final_chunk: True
+2026-08-08 23:47:37.536 | DEBUG    | tau2.user.user_simulator:_generate_next_message:252 - Response: Hi! I need to modify a couple of items in my order—a desk lamp and a backpack—and also change the shipping address from my son’s address in Washington, DC, to my default address in Charlotte.
+2026-08-08 23:47:37.536 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 1. Sending message from Role.USER to Role.AGENT
+2026-08-08 23:47:37.536 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 1.
+From role: Role.USER
+To role: Role.AGENT
+Message: UserMessage
+content: Hi! I need to modify a couple of items in my order—a desk lamp and a backpack—and also change the shipping address from my son’s address in Washington, DC, to my default address in Charlotte.
+is_final_chunk: True
+2026-08-08 23:47:39.451 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 2. Sending message from Role.AGENT to Role.USER
+2026-08-08 23:47:39.451 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 2.
+From role: Role.AGENT
+To role: Role.USER
+Message: AssistantMessage
+content: {"message":"Sure, I can help with those changes. First, please provide the email address on your account so I can authenticate you. If you don’t remember it, provide your first name, last name, and ZIP code instead."}
+is_final_chunk: True
+2026-08-08 23:47:39.451 | DEBUG    | tau2.user.user_simulator:_generate_next_message:230 - User responds to message: AssistantMessage
+content: {"message":"Sure, I can help with those changes. First, please provide the email address on your account so I can authenticate you. If you don’t remember it, provide your first name, last name, and ZIP code instead."}
+is_final_chunk: True
+2026-08-08 23:47:41.194 | DEBUG    | tau2.user.user_simulator:_generate_next_message:252 - Response: I don’t remember the email address, but my name is Ivan Khan, and my ZIP code is 28243.
+2026-08-08 23:47:41.194 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 3. Sending message from Role.USER to Role.AGENT
+2026-08-08 23:47:41.194 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 3.
+From role: Role.USER
+To role: Role.AGENT
+Message: UserMessage
+content: I don’t remember the email address, but my name is Ivan Khan, and my ZIP code is 28243.
+is_final_chunk: True
+2026-08-08 23:47:42.729 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 4. Sending message from Role.AGENT to Role.ENV
+2026-08-08 23:47:42.729 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 4.
+From role: Role.AGENT
+To role: Role.ENV
+Message: AssistantMessage
+ToolCalls:
+ToolCall (from assistant)
+id: call_Ji0fTRjAnW55xyzlbUQOX2aK
+name: find_user_id_by_name_zip
+arguments:
+{
+  "first_name": "Ivan",
+  "last_name": "Khan",
+  "zip": "28243"
+}
+is_final_chunk: True
+2026-08-08 23:47:42.729 | DEBUG    | tau2.environment.environment:get_response:454 - Response: ivan_khan_7475
+2026-08-08 23:47:42.730 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 5. Sending message from Role.ENV to Role.AGENT
+2026-08-08 23:47:42.730 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 5.
+From role: Role.ENV
+To role: Role.AGENT
+Message: ToolMessage (responding to assistant)
+timestamp: 2026-08-08T23:47:42.729887
+content: ivan_khan_7475
+Invalid type dict in attribute 'llm.input_messages.6.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+2026-08-08 23:47:43.955 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 6. Sending message from Role.AGENT to Role.ENV
+2026-08-08 23:47:43.955 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 6.
+From role: Role.AGENT
+To role: Role.ENV
+Message: AssistantMessage
+ToolCalls:
+ToolCall (from assistant)
+id: call_t2weuXtLBs285w6yLkFnVK8F
+name: get_user_details
+arguments:
+{
+  "user_id": "ivan_khan_7475"
+}
+is_final_chunk: True
+2026-08-08 23:47:43.956 | DEBUG    | tau2.environment.environment:get_response:454 - Response: user_id='ivan_khan_7475' name=UserName(first_name='Ivan', last_name='Khan') address=UserAddress(address1='159 Hickory Lane', address2='Suite 995', city='Charlotte', country='USA', state='NC', zip='28243') email='ivan.khan6479@example.com' payment_methods={'gift_card_1711656': GiftCard(source='gift_card', id='gift_card_1711656', balance=62.0), 'paypal_7729105': Paypal(source='paypal', id='paypal_7729105')} orders=['#W5270061', '#W7032009', '#W1519594', '#W5782623']
+2026-08-08 23:47:43.956 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 7. Sending message from Role.ENV to Role.AGENT
+2026-08-08 23:47:43.956 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 7.
+From role: Role.ENV
+To role: Role.AGENT
+Message: ToolMessage (responding to assistant)
+timestamp: 2026-08-08T23:47:43.956169
+content: {"user_id": "ivan_khan_7475", "name": {"first_name": "Ivan", "last_name": "Khan"}, "address": {"address1": "159 Hickory Lane", "address2": "Suite 995", "city": "Charlotte", "country": "USA", "state": "NC", "zip": "28243"}, "email": "ivan.khan6479@example.com", "payment_methods": {"gift_card_1711656": {"source": "gift_card", "id": "gift_card_1711656", "balance": 62.0}, "paypal_7729105": {"source": "paypal", "id": "paypal_7729105"}}, "orders": ["#W5270061", "#W7032009", "#W1519594", "#W5782623"]}
+Invalid type dict in attribute 'llm.input_messages.6.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+Invalid type dict in attribute 'llm.input_messages.8.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+2026-08-08 23:47:46.240 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 8. Sending message from Role.AGENT to Role.USER
+2026-08-08 23:47:46.240 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 8.
+From role: Role.AGENT
+To role: Role.USER
+Message: AssistantMessage
+content: {"message":"You’re authenticated. Your default address is 159 Hickory Lane, Suite 995, Charlotte, NC 28243, USA. Please provide the order number containing the desk lamp and backpack so I can verify its status and items before preparing the requested changes."}
+is_final_chunk: True
+2026-08-08 23:47:46.240 | DEBUG    | tau2.user.user_simulator:_generate_next_message:230 - User responds to message: AssistantMessage
+content: {"message":"You’re authenticated. Your default address is 159 Hickory Lane, Suite 995, Charlotte, NC 28243, USA. Please provide the order number containing the desk lamp and backpack so I can verify its status and items before preparing the requested changes."}
+is_final_chunk: True
+2026-08-08 23:47:47.586 | DEBUG    | tau2.user.user_simulator:_generate_next_message:252 - Response: ###OUT-OF-SCOPE###

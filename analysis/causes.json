@@ -180,8 +180,8 @@
   },
   {
     "cause_id": "proposal_framing_leads_with_downside",
-    "status": "confirmed",
-    "description": "When the exact request is unsatisfiable, the agent frames the best alternative around its deviations ('accepting the resolution change?'), and the rigidly-scripted sim declines an option gold expects it to accept (52: primary goal max zoom, price no object; agent led with the drawback all 4 observed attempts).",
+    "status": "refuted",
+    "description": "When the exact request is unsatisfiable, the agent frames the best alternative around its deviations ('accepting the resolution change?'), and the rigidly-scripted sim declines an option gold expects it to accept (52: primary goal max zoom, price no object; agent led with the drawback all 4 observed attempts). REFUTED by fixpack2-v1: the framing fix did not flip 52 (0/5 lifetime acceptances). Adopting the analyst's hypothesis: suspected task-level defect \u2014 the sim's hard constraint (24MP/SD/max-zoom) is unsatisfiable while gold expects the 30MP exchange. Joins 105 on the suspected-unsolvable list.",
     "tasks": [
       "tau3-retail-52"
     ],
@@ -230,8 +230,8 @@
   },
   {
     "cause_id": "constraint_priority_variant_selection",
-    "status": "confirmed",
-    "description": "With multiple option constraints and ranked preferences ('same difficulty, 1000 more pieces, art theme over animals if both available') the agent selects a variant violating the priority order (99, wrong_variant persisted through the basic variant-resolution fix).",
+    "status": "refuted",
+    "description": "With multiple option constraints and ranked preferences ('same difficulty, 1000 more pieces, art theme over animals if both available') the agent selects a variant violating the priority order (99, wrong_variant persisted through the basic variant-resolution fix). REFUTED: analyst diagnosis verified in raw data \u2014 99's agent claimed variant 5546244844 'unavailable' against available:true in its own fetch. Reclassified under tool_output_misread.",
     "tasks": [
       "tau3-retail-99"
     ],
@@ -254,10 +254,11 @@
   },
   {
     "cause_id": "transfer_instead_of_decline_and_continue",
-    "status": "confirmed",
+    "status": "fixed",
     "description": "One out-of-scope request (refund for a lost tablet) triggered transfer_to_human_agents, ending the conversation before the sim voiced its remaining gold requests (two cancels and a return); 32 made zero writes.",
     "tasks": [
-      "tau3-retail-32"
+      "tau3-retail-32",
+      "tau3-retail-59"
     ],
     "evidence": {
       "tau3-retail-32": "runs/fixpack-v1/transcripts/tau3-retail-32__A5M7C57.md"
@@ -275,5 +276,47 @@
       ],
       "success_criterion": "Task 32 passes."
     }
+  },
+  {
+    "cause_id": "tool_output_misread",
+    "status": "confirmed",
+    "description": "The agent states facts contradicting tool output it already fetched: 91 said 'couldn't find a smartwatch' though item 1631806422 was in its turn-8 order details; 99 called variant 5546244844 unavailable against available:true. Proposed by the LLM analyst, verified against raw records.",
+    "tasks": [
+      "tau3-retail-91",
+      "tau3-retail-99"
+    ],
+    "evidence": {
+      "tau3-retail-91": "runs/fixpack-v1/transcripts/tau3-retail-91__hxmAUPd.md",
+      "tau3-retail-99": "runs/fixpack-v1/transcripts/tau3-retail-99__ykpibBF.md"
+    },
+    "proposed_fix": "Re-scan fetched details entry-by-entry before claiming absence/unavailability (round-3 paragraph).",
+    "discovered_in": [
+      "fixpack-v1"
+    ],
+    "proposed_by": "llm",
+    "verification": null
+  },
+  {
+    "cause_id": "modify_ordering_and_lock",
+    "status": "confirmed",
+    "description": "Pending-order changes executed in the wrong order: modify_pending_order_items locks the order, so a confirmed address change submitted after (or skipped) never lands (112, and the round-2 regression generalized this to skipping modifications entirely on 72/104/110/59). Analyst's lock-ordering insight, correctly scoped in round 3.",
+    "tasks": [
+      "tau3-retail-112",
+      "tau3-retail-72",
+      "tau3-retail-104",
+      "tau3-retail-110",
+      "tau3-retail-59"
+    ],
+    "evidence": {
+      "tau3-retail-112": "runs/fixpack-v1/transcripts/tau3-retail-112__sdtfVD9.md",
+      "tau3-retail-72": "runs/fixpack2-v1/transcripts/tau3-retail-72__5R6Pdpt.md"
+    },
+    "proposed_fix": "Address/payment changes before the locking item-modify; never skip a requested modification (round-3 paragraph).",
+    "discovered_in": [
+      "fixpack-v1",
+      "fixpack2-v1"
+    ],
+    "proposed_by": "llm",
+    "verification": null
   }
 ]

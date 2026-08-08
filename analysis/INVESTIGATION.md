@@ -226,3 +226,29 @@ compared against this table as its known-answer debut before merging.
 
 **Run command (pending approval):**
 `./run_subset.sh fixpack2-v1 analysis/tasksets/fixpack2-verify.txt`
+
+## Step 10 — fixpack2-v1: the controls catch a caused regression; analyst merge
+
+**Run:** 8/17 (harness a0a2c0c69023). Criteria: transfer fix ✓ (32 passes,
+status → fixed); mapping half ✓ (27 passes; 93 persists — needed the
+enumerate-all-orders mechanism); 91 ✓. But canaries 72/104/110 (round-1 wins)
+and stable control 2 FAILED, all missing_action.modify_* — the round-2
+"blocks any further state-changing action" sentence read as "avoid multiple
+writes per order" and suppressed legitimate modifications. This is a CAUSED
+regression, detected exactly as designed (canaries + controls + label
+transitions).
+
+**Adjudications from the run + analyst comparison:**
+- 52: framing hypothesis REFUTED (0/5 lifetime); adopting the analyst's
+  suspected task-defect. Joins 105 on the unsolvable-suspect list.
+- 99: preference hypothesis REFUTED; analyst's tool_output_misread verified
+  against raw records (available:true vs "unavailable").
+- Analyst debut scorecard: agreed 4/8, beat the human table on 4/8 (59's
+  transfer, 91/99 misreads, 112 lock-ordering); its two boldest claims
+  verified in raw data. Output preserved verbatim in causes_proposed_llm.json;
+  reviewed entries merged (tool_output_misread, modify_ordering_and_lock).
+
+**Round 3 (commit 78dd86a):** rewrote the harmful paragraph with correct
+scoping (delivered = one return-or-exchange; pending = address+payment+items
+with address/payment BEFORE the locking item-modify), added enumerate-all-
+orders (93) and the misread guard (91/99).
