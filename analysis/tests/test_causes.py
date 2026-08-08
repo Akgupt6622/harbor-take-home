@@ -57,7 +57,7 @@ def write_verdict_job(root: Path, job: str, verdicts: dict[str, bool]) -> None:
 
 def test_registry_roundtrip_and_duplicate_guard(tmp_path: Path) -> None:
     causes = load_causes(REPO_ROOT / "analysis" / "causes.json")
-    assert get_cause(causes, "auth_username_deadend").status == "confirmed"
+    assert get_cause(causes, "auth_username_deadend").cause_id  # exists; status is lifecycle-mutable
     for cause in causes:
         for task, transcript in cause.evidence.items():
             assert task in cause.tasks
