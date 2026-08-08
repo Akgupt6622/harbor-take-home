@@ -26,3 +26,4 @@ PYTHONPATH=adapters/tau3-bench uv run harbor run -y \
   "$@"
 
 uv run python -m analysis.parse_traces "results/tau-retail/$job_name"
+uv run python -m analysis.experiments record "results/tau-retail/$job_name" --taskset "$task_list"
