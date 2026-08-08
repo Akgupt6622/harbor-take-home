@@ -164,3 +164,33 @@ disjoint.
 `./run_subset.sh fixpack-v1 analysis/tasksets/fixpack-verify.txt`
 (28 tasks ≈ $1.40–1.80, ~6–8 min; auto-parses, auto-records under the new
 harness digest.)
+
+## Step 8 — fixpack-v1 results (harness digest 48910ac73d57)
+
+**Run:** `./run_subset.sh fixpack-v1 analysis/tasksets/fixpack-verify.txt` —
+28 tasks, 20 passed, 0 exceptions, 4m52s, ~$0.83 agent+user. Controls 5/5.
+
+**Per-cause verdicts against pre-registered criteria:**
+- **A auth_username_deadend: FIXED — 7/7 members pass** (criterion ≥5/7). The
+  username-derivation paragraph fully unlocked the cluster. Status → fixed.
+- **D address_country_not_canonical: FIXED per criterion** — 59's
+  `wrong_args…country` label is gone; the task still fails, but now only on
+  `missing_action.cancel_pending_order` (an E residual). Status → fixed.
+- **E multi_request_scope_errors: criterion MET (3 of 5)** — 31, 72, 104 pass;
+  27 and 32 still fail. Partial.
+- **C exchange_wrong_variant_resolution: criterion NOT met** — 18, 45, 107
+  pass, but 91 and 99 fail. 91 is a *transition*, not a persistence: its
+  exchange is now correct (wrong_variant label gone) and it fails on a return
+  missing one item (scope). 99's wrong_variant persists.
+- **B exchange_payment_method_assumed: NOT met** — 52 still
+  `missing_action.exchange` (98 passed, informational). Needs a fresh read.
+
+**Remaining failures and their new diagnoses:** 27 (still exchanges a
+non-delivered order + returns instead), 32 (misses TWO cancels + a return),
+52 (still refuses the exchange), 59 (cancel only), 91 (return missing an
+item), 93 (cross-order confusion), 99 (variant), 112 (address modify missed).
+
+**Decision:** revealed-vs-caused analysis says nothing was caused (controls
+clean, every remaining failure is a pre-existing cause or a downstream reveal).
+Next: read the four fresh transcripts (52, 27, 93, 99) before any further
+spend; then fix round 2 and a full matched run.

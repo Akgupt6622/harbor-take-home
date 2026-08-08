@@ -1,0 +1,265 @@
+2026-08-08 23:23:08.899 | WARNING  | tau2.utils.utils:<module>:14 - No .env file found
+2026-08-08 23:23:08.899 | INFO     | tau2.utils.utils:<module>:22 - Using data directory from environment: /opt/tau2-bench/data
+2026-08-08 23:23:09.603 | INFO     | tau2.voice.utils.utils:<module>:26 - Found 4 continuous noise files in the directory /opt/tau2-bench/data/voice/background_noise_audio_pcm_mono_verified/continuous
+2026-08-08 23:23:09.603 | INFO     | tau2.voice.utils.utils:<module>:33 - Found 5 burst noise files in the directory /opt/tau2-bench/data/voice/background_noise_audio_pcm_mono_verified/bursts
+2026-08-08 23:23:09.734 | INFO     | tau2.utils.llm_utils:<module>:102 - LiteLLM: Cache is disabled
+2026-08-08 23:23:09.960 | DEBUG    | tau2.registry:<module>:282 - Registering default components...
+2026-08-08 23:23:09.960 | DEBUG    | tau2.registry:<module>:344 - Default components registered successfully. Registry info: {
+  "domains": [
+    "mock",
+    "airline",
+    "retail",
+    "telecom",
+    "telecom-workflow",
+    "banking_knowledge"
+  ],
+  "agents": [
+    "llm_agent",
+    "llm_agent_gt",
+    "llm_agent_solo",
+    "discrete_time_audio_native_agent"
+  ],
+  "users": [
+    "user_simulator",
+    "dummy_user",
+    "voice_streaming_user_simulator"
+  ],
+  "task_sets": [
+    "mock",
+    "airline",
+    "retail",
+    "telecom_full",
+    "telecom_small",
+    "telecom",
+    "telecom-workflow",
+    "banking_knowledge"
+  ]
+}
+2026-08-08 23:23:10.207 | INFO     | tau2.orchestrator.orchestrator:_validate_mode_compatibility:477 - Orchestrator initialized in HALF_DUPLEX mode (turn-based) with agent=LLMAgent, user=UserSimulator
+2026-08-08 23:23:10.207 | WARNING  | tau2.agent.base.llm_config:set_seed:47 - Seed is already set to 626729, resetting it to 626729
+2026-08-08 23:23:10.207 | WARNING  | tau2.agent.base.llm_config:set_seed:47 - Seed is already set to 626729, resetting it to 626729
+2026-08-08 23:23:10.208 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 0. Sending message from Role.AGENT to Role.USER
+2026-08-08 23:23:10.208 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 0.
+From role: Role.AGENT
+To role: Role.USER
+Message: AssistantMessage
+content: Hi! How can I help you today?
+is_final_chunk: True
+2026-08-08 23:23:10.208 | DEBUG    | tau2.user.user_simulator:_generate_next_message:230 - User responds to message: AssistantMessage
+content: Hi! How can I help you today?
+is_final_chunk: True
+2026-08-08 23:23:12.178 | DEBUG    | tau2.user.user_simulator:_generate_next_message:252 - Response: I just received a tablet and already lost it. I’m pretty frustrated. Can you first help me find the tracking number for that order?
+2026-08-08 23:23:12.178 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 1. Sending message from Role.USER to Role.AGENT
+2026-08-08 23:23:12.178 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 1.
+From role: Role.USER
+To role: Role.AGENT
+Message: UserMessage
+content: I just received a tablet and already lost it. I’m pretty frustrated. Can you first help me find the tracking number for that order?
+is_final_chunk: True
+2026-08-08 23:23:13.888 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 2. Sending message from Role.AGENT to Role.USER
+2026-08-08 23:23:13.888 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 2.
+From role: Role.AGENT
+To role: Role.USER
+Message: AssistantMessage
+content: {"message":"I’m sorry you’re dealing with that. To locate the order and tracking number, please provide the email address on your account. If you don’t recall it, provide your full name and ZIP code."}
+is_final_chunk: True
+2026-08-08 23:23:13.888 | DEBUG    | tau2.user.user_simulator:_generate_next_message:230 - User responds to message: AssistantMessage
+content: {"message":"I’m sorry you’re dealing with that. To locate the order and tracking number, please provide the email address on your account. If you don’t recall it, provide your full name and ZIP code."}
+is_final_chunk: True
+2026-08-08 23:23:14.921 | DEBUG    | tau2.user.user_simulator:_generate_next_message:252 - Response: I don’t have an email. The name is Olivia Lopez, and the ZIP code is 76171.
+2026-08-08 23:23:14.921 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 3. Sending message from Role.USER to Role.AGENT
+2026-08-08 23:23:14.922 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 3.
+From role: Role.USER
+To role: Role.AGENT
+Message: UserMessage
+content: I don’t have an email. The name is Olivia Lopez, and the ZIP code is 76171.
+is_final_chunk: True
+2026-08-08 23:23:16.651 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 4. Sending message from Role.AGENT to Role.ENV
+2026-08-08 23:23:16.651 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 4.
+From role: Role.AGENT
+To role: Role.ENV
+Message: AssistantMessage
+ToolCalls:
+ToolCall (from assistant)
+id: call_ygISLFq0kPEypkKMJs8v07tq
+name: find_user_id_by_name_zip
+arguments:
+{
+  "first_name": "Olivia",
+  "last_name": "Lopez",
+  "zip": "76171"
+}
+is_final_chunk: True
+2026-08-08 23:23:16.651 | DEBUG    | tau2.environment.environment:get_response:454 - Response: olivia_lopez_3865
+2026-08-08 23:23:16.651 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 5. Sending message from Role.ENV to Role.AGENT
+2026-08-08 23:23:16.651 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 5.
+From role: Role.ENV
+To role: Role.AGENT
+Message: ToolMessage (responding to assistant)
+timestamp: 2026-08-08T23:23:16.651459
+content: olivia_lopez_3865
+Invalid type dict in attribute 'llm.input_messages.6.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+2026-08-08 23:23:19.396 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 6. Sending message from Role.AGENT to Role.ENV
+2026-08-08 23:23:19.396 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 6.
+From role: Role.AGENT
+To role: Role.ENV
+Message: AssistantMessage
+ToolCalls:
+ToolCall (from assistant)
+id: call_U8BpKDEUH8x6osfIjJBdJ8sg
+name: get_user_details
+arguments:
+{
+  "user_id": "olivia_lopez_3865"
+}
+is_final_chunk: True
+2026-08-08 23:23:19.396 | DEBUG    | tau2.environment.environment:get_response:454 - Response: user_id='olivia_lopez_3865' name=UserName(first_name='Olivia', last_name='Lopez') address=UserAddress(address1='310 Laurel Lane', address2='Suite 480', city='Fort Worth', country='USA', state='TX', zip='76171') email='olivia.lopez4535@example.com' payment_methods={'gift_card_7711863': GiftCard(source='gift_card', id='gift_card_7711863', balance=44.0)} orders=['#W9319364', '#W9373487', '#W2692684', '#W5481803', '#W7449508']
+2026-08-08 23:23:19.396 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 7. Sending message from Role.ENV to Role.AGENT
+2026-08-08 23:23:19.396 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 7.
+From role: Role.ENV
+To role: Role.AGENT
+Message: ToolMessage (responding to assistant)
+timestamp: 2026-08-08T23:23:19.396665
+content: {"user_id": "olivia_lopez_3865", "name": {"first_name": "Olivia", "last_name": "Lopez"}, "address": {"address1": "310 Laurel Lane", "address2": "Suite 480", "city": "Fort Worth", "country": "USA", "state": "TX", "zip": "76171"}, "email": "olivia.lopez4535@example.com", "payment_methods": {"gift_card_7711863": {"source": "gift_card", "id": "gift_card_7711863", "balance": 44.0}}, "orders": ["#W9319364", "#W9373487", "#W2692684", "#W5481803", "#W7449508"]}
+Invalid type dict in attribute 'llm.input_messages.6.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+Invalid type dict in attribute 'llm.input_messages.8.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+2026-08-08 23:23:20.883 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 8. Sending message from Role.AGENT to Role.ENV
+2026-08-08 23:23:20.883 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 8.
+From role: Role.AGENT
+To role: Role.ENV
+Message: AssistantMessage
+ToolCalls:
+ToolCall (from assistant)
+id: call_NmJtCKrXtDZRgrdrProed3Vs
+name: get_order_details
+arguments:
+{
+  "order_id": "#W9319364"
+}
+is_final_chunk: True
+2026-08-08 23:23:20.883 | DEBUG    | tau2.environment.environment:get_response:454 - Response: order_id='#W9319364' user_id='olivia_lopez_3865' address=UserAddress(address1='310 Laurel Lane', address2='Suite 480', city='Fort Worth', country='USA', state='TX', zip='76171') items=[OrderItem(name='Office Chair', product_id='4794339885', item_id='3704016729', price=487.67, options={'material': 'mesh', 'color': 'blue', 'armrest': 'fixed', 'backrest height': 'standard'})] status='processed' fulfillments=[OrderFullfilment(tracking_id=['468830347216'], item_ids=['3704016729'])] payment_history=[OrderPayment(transaction_type='payment', amount=487.67, payment_method_id='gift_card_7711863')] cancel_reason=None exchange_items=None exchange_new_items=None exchange_payment_method_id=None exchange_price_difference=None return_items=None return_payment_method_id=None
+2026-08-08 23:23:20.884 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 9. Sending message from Role.ENV to Role.AGENT
+2026-08-08 23:23:20.884 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 9.
+From role: Role.ENV
+To role: Role.AGENT
+Message: ToolMessage (responding to assistant)
+timestamp: 2026-08-08T23:23:20.883957
+content: {"order_id": "#W9319364", "user_id": "olivia_lopez_3865", "address": {"address1": "310 Laurel Lane", "address2": "Suite 480", "city": "Fort Worth", "country": "USA", "state": "TX", "zip": "76171"}, "items": [{"name": "Office Chair", "product_id": "4794339885", "item_id": "3704016729", "price": 487.67, "options": {"material": "mesh", "color": "blue", "armrest": "fixed", "backrest height": "standard"}}], "status": "processed", "fulfillments": [{"tracking_id": ["468830347216"], "item_ids": ["3704016729"]}], "payment_history": [{"transaction_type": "payment", "amount": 487.67, "payment_method_id": "gift_card_7711863"}], "cancel_reason": null, "exchange_items": null, "exchange_new_items": null, "exchange_payment_method_id": null, "exchange_price_difference": null, "return_items": null, "return_payment_method_id": null}
+Invalid type dict in attribute 'llm.input_messages.6.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+Invalid type dict in attribute 'llm.input_messages.8.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+Invalid type dict in attribute 'llm.input_messages.10.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+2026-08-08 23:23:21.899 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 10. Sending message from Role.AGENT to Role.ENV
+2026-08-08 23:23:21.899 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 10.
+From role: Role.AGENT
+To role: Role.ENV
+Message: AssistantMessage
+ToolCalls:
+ToolCall (from assistant)
+id: call_jnMdKGqywVmZrLgcmLp4e23Z
+name: get_order_details
+arguments:
+{
+  "order_id": "#W9373487"
+}
+is_final_chunk: True
+2026-08-08 23:23:21.899 | DEBUG    | tau2.environment.environment:get_response:454 - Response: order_id='#W9373487' user_id='olivia_lopez_3865' address=UserAddress(address1='310 Laurel Lane', address2='Suite 480', city='Fort Worth', country='USA', state='TX', zip='76171') items=[OrderItem(name='Portable Charger', product_id='6942297802', item_id='4063401924', price=109.27, options={'capacity': '20000mAh', 'output': 'Wireless', 'color': 'blue'})] status='pending' fulfillments=[] payment_history=[OrderPayment(transaction_type='payment', amount=109.27, payment_method_id='gift_card_7711863')] cancel_reason=None exchange_items=None exchange_new_items=None exchange_payment_method_id=None exchange_price_difference=None return_items=None return_payment_method_id=None
+2026-08-08 23:23:21.899 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 11. Sending message from Role.ENV to Role.AGENT
+2026-08-08 23:23:21.899 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 11.
+From role: Role.ENV
+To role: Role.AGENT
+Message: ToolMessage (responding to assistant)
+timestamp: 2026-08-08T23:23:21.899446
+content: {"order_id": "#W9373487", "user_id": "olivia_lopez_3865", "address": {"address1": "310 Laurel Lane", "address2": "Suite 480", "city": "Fort Worth", "country": "USA", "state": "TX", "zip": "76171"}, "items": [{"name": "Portable Charger", "product_id": "6942297802", "item_id": "4063401924", "price": 109.27, "options": {"capacity": "20000mAh", "output": "Wireless", "color": "blue"}}], "status": "pending", "fulfillments": [], "payment_history": [{"transaction_type": "payment", "amount": 109.27, "payment_method_id": "gift_card_7711863"}], "cancel_reason": null, "exchange_items": null, "exchange_new_items": null, "exchange_payment_method_id": null, "exchange_price_difference": null, "return_items": null, "return_payment_method_id": null}
+Invalid type dict in attribute 'llm.input_messages.6.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+Invalid type dict in attribute 'llm.input_messages.8.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+Invalid type dict in attribute 'llm.input_messages.10.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+Invalid type dict in attribute 'llm.input_messages.12.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+2026-08-08 23:23:23.037 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 12. Sending message from Role.AGENT to Role.ENV
+2026-08-08 23:23:23.037 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 12.
+From role: Role.AGENT
+To role: Role.ENV
+Message: AssistantMessage
+ToolCalls:
+ToolCall (from assistant)
+id: call_Uj80SNNKOhAigqTLPWHPY8ep
+name: get_order_details
+arguments:
+{
+  "order_id": "#W2692684"
+}
+is_final_chunk: True
+2026-08-08 23:23:23.037 | DEBUG    | tau2.environment.environment:get_response:454 - Response: order_id='#W2692684' user_id='olivia_lopez_3865' address=UserAddress(address1='310 Laurel Lane', address2='Suite 480', city='Fort Worth', country='USA', state='TX', zip='76171') items=[OrderItem(name='Tablet', product_id='8024098596', item_id='3788616824', price=951.21, options={'screen size': '10-inch', 'storage': '128GB', 'color': 'black'})] status='delivered' fulfillments=[OrderFullfilment(tracking_id=['746342064230'], item_ids=['3788616824'])] payment_history=[OrderPayment(transaction_type='payment', amount=951.21, payment_method_id='gift_card_7711863')] cancel_reason=None exchange_items=None exchange_new_items=None exchange_payment_method_id=None exchange_price_difference=None return_items=None return_payment_method_id=None
+2026-08-08 23:23:23.037 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 13. Sending message from Role.ENV to Role.AGENT
+2026-08-08 23:23:23.037 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 13.
+From role: Role.ENV
+To role: Role.AGENT
+Message: ToolMessage (responding to assistant)
+timestamp: 2026-08-08T23:23:23.037554
+content: {"order_id": "#W2692684", "user_id": "olivia_lopez_3865", "address": {"address1": "310 Laurel Lane", "address2": "Suite 480", "city": "Fort Worth", "country": "USA", "state": "TX", "zip": "76171"}, "items": [{"name": "Tablet", "product_id": "8024098596", "item_id": "3788616824", "price": 951.21, "options": {"screen size": "10-inch", "storage": "128GB", "color": "black"}}], "status": "delivered", "fulfillments": [{"tracking_id": ["746342064230"], "item_ids": ["3788616824"]}], "payment_history": [{"transaction_type": "payment", "amount": 951.21, "payment_method_id": "gift_card_7711863"}], "cancel_reason": null, "exchange_items": null, "exchange_new_items": null, "exchange_payment_method_id": null, "exchange_price_difference": null, "return_items": null, "return_payment_method_id": null}
+Invalid type dict in attribute 'llm.input_messages.6.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+Invalid type dict in attribute 'llm.input_messages.8.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+Invalid type dict in attribute 'llm.input_messages.10.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+Invalid type dict in attribute 'llm.input_messages.12.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+Invalid type dict in attribute 'llm.input_messages.14.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+2026-08-08 23:23:24.624 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 14. Sending message from Role.AGENT to Role.USER
+2026-08-08 23:23:24.624 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 14.
+From role: Role.AGENT
+To role: Role.USER
+Message: AssistantMessage
+content: {"message":"I found the delivered tablet order: **#W2692684**. The tracking number is **746342064230**."}
+is_final_chunk: True
+2026-08-08 23:23:24.624 | DEBUG    | tau2.user.user_simulator:_generate_next_message:230 - User responds to message: AssistantMessage
+content: {"message":"I found the delivered tablet order: **#W2692684**. The tracking number is **746342064230**."}
+is_final_chunk: True
+2026-08-08 23:23:25.946 | DEBUG    | tau2.user.user_simulator:_generate_next_message:252 - Response: Thanks. Since the tablet was lost after delivery, is there any way you can refund it?
+2026-08-08 23:23:25.946 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 15. Sending message from Role.USER to Role.AGENT
+2026-08-08 23:23:25.946 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 15.
+From role: Role.USER
+To role: Role.AGENT
+Message: UserMessage
+content: Thanks. Since the tablet was lost after delivery, is there any way you can refund it?
+is_final_chunk: True
+Invalid type dict in attribute 'llm.input_messages.6.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+Invalid type dict in attribute 'llm.input_messages.8.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+Invalid type dict in attribute 'llm.input_messages.10.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+Invalid type dict in attribute 'llm.input_messages.12.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+Invalid type dict in attribute 'llm.input_messages.14.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+2026-08-08 23:23:29.204 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 16. Sending message from Role.AGENT to Role.ENV
+2026-08-08 23:23:29.204 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 16.
+From role: Role.AGENT
+To role: Role.ENV
+Message: AssistantMessage
+ToolCalls:
+ToolCall (from assistant)
+id: call_VPCJfyAVqcVT4CDS6TuUMFfc
+name: transfer_to_human_agents
+arguments:
+{
+  "summary": "Authenticated customer Olivia Lopez is requesting a refund for delivered tablet order #W2692684, tracking number 746342064230, which she says was lost after delivery. A return cannot be completed because the item is lost; please review possible options."
+}
+is_final_chunk: True
+2026-08-08 23:23:29.205 | DEBUG    | tau2.environment.environment:get_response:454 - Response: Transfer successful
+2026-08-08 23:23:29.205 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 17. Sending message from Role.ENV to Role.AGENT
+2026-08-08 23:23:29.205 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 17.
+From role: Role.ENV
+To role: Role.AGENT
+Message: ToolMessage (responding to assistant)
+timestamp: 2026-08-08T23:23:29.205196
+content: Transfer successful
+Invalid type dict in attribute 'llm.input_messages.6.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+Invalid type dict in attribute 'llm.input_messages.8.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+Invalid type dict in attribute 'llm.input_messages.10.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+Invalid type dict in attribute 'llm.input_messages.12.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+Invalid type dict in attribute 'llm.input_messages.14.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+Invalid type dict in attribute 'llm.input_messages.18.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+2026-08-08 23:23:30.340 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 18. Sending message from Role.AGENT to Role.USER
+2026-08-08 23:23:30.340 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 18.
+From role: Role.AGENT
+To role: Role.USER
+Message: AssistantMessage
+content: {"message":"YOU ARE BEING TRANSFERRED TO A HUMAN AGENT. PLEASE HOLD ON."}
+is_final_chunk: True
+2026-08-08 23:23:30.340 | DEBUG    | tau2.user.user_simulator:_generate_next_message:230 - User responds to message: AssistantMessage
+content: {"message":"YOU ARE BEING TRANSFERRED TO A HUMAN AGENT. PLEASE HOLD ON."}
+is_final_chunk: True
+2026-08-08 23:23:31.412 | DEBUG    | tau2.user.user_simulator:_generate_next_message:252 - Response: ###TRANSFER###
