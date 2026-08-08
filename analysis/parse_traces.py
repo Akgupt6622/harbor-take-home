@@ -102,20 +102,20 @@ def extract_evaluation(span_path: Path) -> tuple[str, bool]:
 def decode_assistant_content(raw: str) -> str:
     """Unwrap the harness's {"message": ...} JSON envelope; pass plain text through.
 
-    The envelope shape is coupled to the current harness response format — if a
-    harness iteration changes it, this is the single place to update, and any
-    unrecognized JSON object fails loudly rather than leaking wrappers downstream.
+    The envelope shape is coupled to the current harness response format — this is
+    the single place to update when it changes. The agent sometimes pads the
+    envelope with extra keys (observed in baseline tau3-retail-20:
+    {"order_id": ..., "status": ..., "message": ...}), so any dict with a string
+    "message" yields that message; every other shape is kept verbatim.
     """
     try:
         parsed = json.loads(raw)
     except json.JSONDecodeError:
         return raw
-    if isinstance(parsed, dict):
-        if set(parsed) == {AGENT_CONTENT_WRAPPER_KEY} and isinstance(
-            parsed[AGENT_CONTENT_WRAPPER_KEY], str
-        ):
-            return parsed[AGENT_CONTENT_WRAPPER_KEY]
-        raise ParseError(f"unrecognized assistant content envelope: {raw[:200]!r}")
+    if isinstance(parsed, dict) and isinstance(
+        parsed.get(AGENT_CONTENT_WRAPPER_KEY), str
+    ):
+        return parsed[AGENT_CONTENT_WRAPPER_KEY]
     return raw
 
 

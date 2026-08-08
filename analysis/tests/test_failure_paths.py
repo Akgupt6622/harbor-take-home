@@ -102,11 +102,14 @@ def test_orphan_tool_result_fails_loudly(job_copy: Path, tool_types: dict[str, s
         parse_trial(job_copy / TRIAL_NAME, "smoke", tool_types)
 
 
-def test_unrecognized_assistant_envelope_fails_loudly() -> None:
+def test_assistant_envelope_decoding() -> None:
     assert decode_assistant_content('{"message": "hi"}') == "hi"
     assert decode_assistant_content("plain greeting") == "plain greeting"
-    with pytest.raises(ParseError, match="envelope"):
-        decode_assistant_content('{"message": "hi", "extra": 1}')
+    padded = '{"order_id": "#W1", "status": "processed", "message": "hi"}'
+    assert decode_assistant_content(padded) == "hi"
+    non_envelope = '{"order_id": "#W1", "status": "processed"}'
+    assert decode_assistant_content(non_envelope) == non_envelope
+    assert decode_assistant_content('{"message": 5}') == '{"message": 5}'
 
 
 def test_cost_drift_fails_loudly(job_copy: Path, tool_types: dict[str, str]) -> None:
