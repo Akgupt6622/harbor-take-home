@@ -104,3 +104,29 @@ Fix #2 candidate = Cause C (same-product variant resolution).
 groups (its tasks died before producing tool-level symptoms). Composing a
 cause-level set requires either a hand-written task list for `run_subset.sh`
 or a `compose --tasks` extension. → decide before fix #1 verification.
+
+## Step 6 — Fix #1: cause auth_username_deadend (first harness change)
+
+**Change:** one paragraph added to the authentication section of
+`benchmarks/tau3-bench/harness/retail/policy.md` — when the user offers a
+username-shaped handle (firstname_lastname_NNNN) plus ZIP, derive the name from
+the handle and authenticate via name + zip; never end the conversation
+unauthenticated while a username and ZIP are available. No other harness edits;
+auth still goes through the sanctioned name+zip path.
+
+**Verification set (pre-registered before any run):**
+`uv run python -m analysis.cli compose runs/baseline authfix-verify
+--cause auth_username_deadend --controls 5 --seed 7
+--controls-from runs/baseline,runs/baseline-2,runs/baseline-3`
+→ 12 tasks: members 5, 6, 7, 8, 9, 67, 68 + stable-pass controls 12, 24, 60,
+76, 111 (passed in all three baselines; seed 7). Frozen copy:
+`analysis/tasksets/authfix-verify.json`.
+
+**Success criterion (registered in causes.json before running):** ≥5 of 7
+members pass, including ≥3 of the deterministic four (5, 8, 9, 67), and 5/5
+controls pass, in one subset run. Post-auth conversations are unexplored
+territory — members may newly hit downstream causes (revealed, not caused;
+judged via label transitions).
+
+**Run command (pending approval):**
+`./run_subset.sh authfix-v1 analysis/tasksets/authfix-verify.txt`
