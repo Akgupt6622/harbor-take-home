@@ -54,7 +54,14 @@
       "baseline"
     ],
     "proposed_by": "human",
-    "verification": null
+    "verification": {
+      "taskset": "analysis/tasksets/fixpack-verify.json",
+      "predicted_flips": [
+        "tau3-retail-52",
+        "tau3-retail-98"
+      ],
+      "success_criterion": "Task 52 passes (98 informational; failed only 2/3 baselines)."
+    }
   },
   {
     "cause_id": "exchange_wrong_variant_resolution",
@@ -78,7 +85,17 @@
       "baseline-3"
     ],
     "proposed_by": "human",
-    "verification": null
+    "verification": {
+      "taskset": "analysis/tasksets/fixpack-verify.json",
+      "predicted_flips": [
+        "tau3-retail-18",
+        "tau3-retail-45",
+        "tau3-retail-91",
+        "tau3-retail-99",
+        "tau3-retail-107"
+      ],
+      "success_criterion": ">=3 of 5 members pass, including both deterministic members 91 and 107."
+    }
   },
   {
     "cause_id": "address_country_not_canonical",
@@ -97,7 +114,13 @@
       "baseline-3"
     ],
     "proposed_by": "human",
-    "verification": null
+    "verification": {
+      "taskset": "analysis/tasksets/fixpack-verify.json",
+      "predicted_flips": [
+        "tau3-retail-59"
+      ],
+      "success_criterion": "The wrong_args.modify_pending_order_address.country label is absent for 59 (task-level pass also requires the cancel from multi_request_scope_errors)."
+    }
   },
   {
     "cause_id": "multi_request_scope_errors",
@@ -124,20 +147,29 @@
       "baseline-3"
     ],
     "proposed_by": "human",
-    "verification": null
+    "verification": {
+      "taskset": "analysis/tasksets/fixpack-verify.json",
+      "predicted_flips": [
+        "tau3-retail-27",
+        "tau3-retail-31",
+        "tau3-retail-32",
+        "tau3-retail-72",
+        "tau3-retail-104"
+      ],
+      "success_criterion": ">=3 of the 5 deterministic members (27, 31, 32, 72, 104) pass; 93/110/112 informational."
+    }
   },
   {
     "cause_id": "gift_card_balance_unhandled",
-    "status": "proposed",
-    "description": "Exchange rejected for insufficient gift card balance; the agent does not fall back to another payment method or renegotiate, leaving the task incomplete.",
+    "status": "refuted",
+    "description": "REFUTED as an agent-side cause: task 105's gold action is argument-identical to the agent's rejected call. DB shows paid 2x$94.80, replacements $210.70 (+$21.10), gift card balance $17.00 \u2014 the runtime tool forbids the exchange the grader assumes succeeded. Suspected unsolvable task / benchmark defect; document in writeup, no harness fix. Task 71 removed (different shape, unread).",
     "tasks": [
-      "tau3-retail-105",
-      "tau3-retail-71"
+      "tau3-retail-105"
     ],
     "evidence": {
       "tau3-retail-105": "runs/baseline/transcripts/tau3-retail-105__2Ud6St7.md"
     },
-    "proposed_fix": "TBD after reading 105/71; likely guidance to offer an alternative payment method when a balance rejection occurs.",
+    "proposed_fix": "None \u2014 suspected benchmark defect, not agent behavior.",
     "discovered_in": [
       "baseline",
       "baseline-2",

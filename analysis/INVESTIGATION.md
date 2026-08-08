@@ -130,3 +130,37 @@ judged via label transitions).
 
 **Run command (pending approval):**
 `./run_subset.sh authfix-v1 analysis/tasksets/authfix-verify.txt`
+
+## Step 7 — Fixes #2–#5 applied; cause F refuted as a benchmark defect
+
+**Cause F resolved by evidence, not a fix:** task 105's gold action is
+argument-identical to the call the backend rejected. DB ground truth: paid
+2×$94.80, replacements $210.70 (+$21.10 difference), gift card balance $17.00 —
+the runtime forbids the exchange the grader assumes succeeded. The agent's
+handling was correct (explained the shortfall; no alternative method exists on
+the account). Suspected unsolvable task; documented for the writeup's
+unresolved-issues section; registry status → refuted. Task 71 removed from F.
+
+**Harness changes (policy.md, one section each):**
+- B `exchange_payment_method_assumed`: ask which payment method to use for
+  price differences/refunds; never assume the original.
+- E `multi_request_scope_errors`: keep a checklist across multi-order
+  requests; only user-requested items in item lists; swaps are exchanges or
+  item modifications, never returns.
+- C `exchange_wrong_variant_resolution`: resolve replacements via
+  get_product_details to the variant matching the requested options; never
+  echo the current item id or guess.
+- D `address_country_not_canonical`: copy unchanged address fields verbatim
+  from the stored record.
+
+**Combined verification set (pre-registered):** `fixpack-verify` — 23 members
+across causes A–E + 5 stable-pass controls (2, 30, 83, 85, 92; seed 11),
+frozen at `analysis/tasksets/fixpack-verify.json`. Per-cause success criteria
+registered in causes.json before running. A single subset run evaluates all
+five fixes: per-task outcomes attribute to causes because member sets are
+disjoint.
+
+**Run command (pending approval):**
+`./run_subset.sh fixpack-v1 analysis/tasksets/fixpack-verify.txt`
+(28 tasks ≈ $1.40–1.80, ~6–8 min; auto-parses, auto-records under the new
+harness digest.)

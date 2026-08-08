@@ -152,7 +152,7 @@ def cmd_compose(
     job_dir: Path,
     name: str,
     group_ids: tuple[str, ...],
-    cause: Cause | None,
+    causes: tuple[Cause, ...],
     n_controls: int | None,
     seed: int | None,
     control_jobs: tuple[Path, ...],
@@ -173,9 +173,9 @@ def cmd_compose(
     for gid in group_ids:
         union.update(index.group(gid).task_ids)
     provenance = group_ids
-    if cause is not None:
+    for cause in causes:
         union.update(cause.tasks)
-        provenance = (*group_ids, f"cause:{cause.cause_id}")
+        provenance = (*provenance, f"cause:{cause.cause_id}")
     controls: contracts.Controls | None = None
     if n_controls is not None:
         if seed is None:
@@ -405,7 +405,7 @@ def main(
             for group in index.groups
             if tool_of(group.group_id) in tools and group.group_id not in group_ids
         )
-    cause: Cause | None = None
+    selected_causes: tuple[Cause, ...] = ()
     if args.cause is not None:
         causes_path = (
             args.cause_file if args.cause_file.is_absolute() else root / args.cause_file
@@ -413,16 +413,19 @@ def main(
         if not causes_path.is_file():
             print(f"error: cause file not found: {causes_path}", file=sys.stderr)
             return 2
+        registry = load_causes(causes_path)
         try:
-            cause = get_cause(load_causes(causes_path), args.cause)
-        except KeyError:
-            valid_causes = ", ".join(c.cause_id for c in load_causes(causes_path))
+            selected_causes = tuple(
+                get_cause(registry, cid) for cid in args.cause.split(",") if cid
+            )
+        except KeyError as missing:
+            valid_causes = ", ".join(c.cause_id for c in registry)
             print(
-                f"error: unknown cause {args.cause!r}; valid: {valid_causes}",
+                f"error: unknown cause {missing}; valid: {valid_causes}",
                 file=sys.stderr,
             )
             return 2
-    if not group_ids and cause is None:
+    if not group_ids and not selected_causes:
         print("error: provide --groups, --tools, and/or --cause", file=sys.stderr)
         return 2
     control_jobs = tuple(Path(p) for p in args.controls_from.split(",") if p)
@@ -431,7 +434,7 @@ def main(
         job_dir,
         args.name,
         group_ids,
-        cause,
+        selected_causes,
         args.controls,
         args.seed,
         control_jobs,
