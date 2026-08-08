@@ -130,7 +130,9 @@
       "tau3-retail-27",
       "tau3-retail-31",
       "tau3-retail-32",
+      "tau3-retail-59",
       "tau3-retail-72",
+      "tau3-retail-91",
       "tau3-retail-93",
       "tau3-retail-104",
       "tau3-retail-110",
@@ -148,15 +150,13 @@
     ],
     "proposed_by": "human",
     "verification": {
-      "taskset": "analysis/tasksets/fixpack-verify.json",
+      "taskset": "analysis/tasksets/fixpack2-verify.json",
       "predicted_flips": [
-        "tau3-retail-27",
-        "tau3-retail-31",
-        "tau3-retail-32",
-        "tau3-retail-72",
-        "tau3-retail-104"
+        "tau3-retail-59",
+        "tau3-retail-91",
+        "tau3-retail-112"
       ],
-      "success_criterion": ">=3 of the 5 deterministic members (27, 31, 32, 72, 104) pass; 93/110/112 informational."
+      "success_criterion": ">=2 of {59, 91, 112} pass; canaries 31/72/104/110 stay passing."
     }
   },
   {
@@ -177,5 +177,103 @@
     ],
     "proposed_by": "human",
     "verification": null
+  },
+  {
+    "cause_id": "proposal_framing_leads_with_downside",
+    "status": "confirmed",
+    "description": "When the exact request is unsatisfiable, the agent frames the best alternative around its deviations ('accepting the resolution change?'), and the rigidly-scripted sim declines an option gold expects it to accept (52: primary goal max zoom, price no object; agent led with the drawback all 4 observed attempts).",
+    "tasks": [
+      "tau3-retail-52"
+    ],
+    "evidence": {
+      "tau3-retail-52": "runs/fixpack-v1/transcripts/tau3-retail-52__dsiHrYT.md"
+    },
+    "proposed_fix": "Present the closest available option led by the user's primary goal; state deviations factually afterwards; clarify it is the only path to the goal before giving up.",
+    "discovered_in": [
+      "fixpack-v1"
+    ],
+    "proposed_by": "human",
+    "verification": {
+      "taskset": "analysis/tasksets/fixpack2-verify.json",
+      "predicted_flips": [
+        "tau3-retail-52"
+      ],
+      "success_criterion": "Task 52 passes."
+    }
+  },
+  {
+    "cause_id": "cross_order_item_mapping",
+    "status": "confirmed",
+    "description": "In multi-order conversations the agent maps items to the wrong order: 27 placed the return on the order that needed the exchange (the return flipped the status and the gold exchange was then rejected as non-deliverable); 93 exchanged on #W2905754 where gold expects #W4073673.",
+    "tasks": [
+      "tau3-retail-27",
+      "tau3-retail-93"
+    ],
+    "evidence": {
+      "tau3-retail-27": "runs/fixpack-v1/transcripts/tau3-retail-27__YGMysLe.md",
+      "tau3-retail-93": "runs/fixpack-v1/transcripts/tau3-retail-93__TFYpJBX.md"
+    },
+    "proposed_fix": "Verify item-to-order mapping via get_order_details before writes; treat same-order return+exchange as a mapping error.",
+    "discovered_in": [
+      "fixpack-v1",
+      "baseline"
+    ],
+    "proposed_by": "human",
+    "verification": {
+      "taskset": "analysis/tasksets/fixpack2-verify.json",
+      "predicted_flips": [
+        "tau3-retail-27",
+        "tau3-retail-93"
+      ],
+      "success_criterion": "Both 27 and 93 pass."
+    }
+  },
+  {
+    "cause_id": "constraint_priority_variant_selection",
+    "status": "confirmed",
+    "description": "With multiple option constraints and ranked preferences ('same difficulty, 1000 more pieces, art theme over animals if both available') the agent selects a variant violating the priority order (99, wrong_variant persisted through the basic variant-resolution fix).",
+    "tasks": [
+      "tau3-retail-99"
+    ],
+    "evidence": {
+      "tau3-retail-99": "runs/fixpack-v1/transcripts/tau3-retail-99__ykpibBF.md"
+    },
+    "proposed_fix": "Filter available variants by hard constraints, then apply stated preferences in order; state which preference was applied.",
+    "discovered_in": [
+      "fixpack-v1",
+      "baseline-2"
+    ],
+    "proposed_by": "human",
+    "verification": {
+      "taskset": "analysis/tasksets/fixpack2-verify.json",
+      "predicted_flips": [
+        "tau3-retail-99"
+      ],
+      "success_criterion": "Task 99 passes."
+    }
+  },
+  {
+    "cause_id": "transfer_instead_of_decline_and_continue",
+    "status": "confirmed",
+    "description": "One out-of-scope request (refund for a lost tablet) triggered transfer_to_human_agents, ending the conversation before the sim voiced its remaining gold requests (two cancels and a return); 32 made zero writes.",
+    "tasks": [
+      "tau3-retail-32"
+    ],
+    "evidence": {
+      "tau3-retail-32": "runs/fixpack-v1/transcripts/tau3-retail-32__A5M7C57.md"
+    },
+    "proposed_fix": "Decline the unserviceable request and continue serving; transfer only when no serviceable requests remain.",
+    "discovered_in": [
+      "fixpack-v1",
+      "baseline"
+    ],
+    "proposed_by": "human",
+    "verification": {
+      "taskset": "analysis/tasksets/fixpack2-verify.json",
+      "predicted_flips": [
+        "tau3-retail-32"
+      ],
+      "success_criterion": "Task 32 passes."
+    }
   }
 ]

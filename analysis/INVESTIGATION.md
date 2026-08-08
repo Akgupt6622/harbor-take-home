@@ -194,3 +194,35 @@ item), 93 (cross-order confusion), 99 (variant), 112 (address modify missed).
 clean, every remaining failure is a pre-existing cause or a downstream reveal).
 Next: read the four fresh transcripts (52, 27, 93, 99) before any further
 spend; then fix round 2 and a full matched run.
+
+## Step 9 — Round-2 analysis (human) and fixes #6–#9
+
+Fresh reads of all 8 fixpack-v1 survivors (evidence-turn guided) produced four
+new confirmed causes — registered in causes.json with fixpack-v1 transcripts:
+
+- `proposal_framing_leads_with_downside` (52): fix B worked mechanically (gold
+  item offered, payment choice given) but the proposal led with the drawback
+  and the rigid sim declined. Fix: frame the best option on the user's primary
+  goal.
+- `cross_order_item_mapping` (27, 93): 27's return was placed on the order
+  that needed the exchange — the status flip then blocked the gold exchange;
+  93 exchanged on the wrong order. Fix: verify item-to-order mapping; treat
+  same-order return+exchange as a mapping error.
+- `constraint_priority_variant_selection` (99): ranked preferences resolved to
+  the wrong variant. Fix: hard constraints first, then preferences in order.
+- `transfer_instead_of_decline_and_continue` (32): one out-of-scope request
+  (lost-item refund) triggered a transfer that abandoned two cancels and a
+  return the sim never got to voice. Fix: decline and continue; transfer only
+  with nothing serviceable left.
+
+Plus checklist strengthening for the E residuals (91's dropped return item,
+112's missed address change, 59's missing cancel).
+
+**Verification set:** `fixpack2-verify` — 12 members (incl. round-1 winners
+31/72/104/110 as natural canaries) + 5 stable-pass controls (2, 4, 23, 40, 54;
+seed 13). Per-cause criteria pre-registered. In parallel, the LLM analyst is
+running blind in a clean room over the same 8 survivors; its proposals will be
+compared against this table as its known-answer debut before merging.
+
+**Run command (pending approval):**
+`./run_subset.sh fixpack2-v1 analysis/tasksets/fixpack2-verify.txt`
