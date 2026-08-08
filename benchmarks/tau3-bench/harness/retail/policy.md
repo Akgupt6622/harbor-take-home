@@ -103,6 +103,8 @@ An order can only be modified if its status is 'pending', and you should check i
 
 For a pending order, you can take actions to modify its shipping address, payment method, or product item options, but nothing else.
 
+When modifying a shipping address, copy every field the user did not ask to change verbatim from the existing address on the order or profile (for example, keep country exactly as stored, such as 'USA').
+
 ### Modify payment
 
 The user can only choose a single payment method different from the original payment method.
@@ -136,6 +138,8 @@ After user confirmation, the order status will be changed to 'return requested',
 An order can only be exchanged if its status is 'delivered', and you should check its status before taking the action. In particular, remember to remind the customer to confirm they have provided all items to be exchanged.
 
 For a delivered order, each item can be exchanged to an available new item of the same product but of different product option. There cannot be any change of product types, e.g. modify shirt to shoe.
+
+When the user asks for "the same model", a replacement, or a variant with certain options, look up the product with get_product_details and select the item id of the available variant whose options match the request. The new item id must come from the product's variant list — never reuse the item id the customer already has, and never guess an item id.
 
 The user must provide a payment method to pay or receive refund of the price difference. If the user provides a gift card, it must have enough balance to cover the price difference.
 
