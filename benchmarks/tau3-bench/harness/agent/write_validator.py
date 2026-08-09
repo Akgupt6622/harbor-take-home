@@ -277,7 +277,7 @@ def validate_write(
                     f"'{old_value}' to '{new_value}', but the user has not "
                     f"mentioned '{new_value}'. If the user already agreed to "
                     f"this, simply re-issue the same call and it will pass; "
-                    f"otherwise ask them to confirm this '{option}' change "
-                    f"(or choose a variant that keeps '{old_value}'), then retry."
+                    f"otherwise list the qualifying variants with what each "
+                    f"changes and let the user choose, then retry."
                 )
     return None

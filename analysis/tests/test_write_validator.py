@@ -260,7 +260,7 @@ class TestV3OptionPreservation:
         )
         assert bounce is not None
         assert "'blue'" in bounce
-        assert "confirm" in bounce.lower()
+        assert "let the user choose" in bounce.lower()
 
     def test_passes_when_user_mentioned_changed_value(self) -> None:
         assert (
