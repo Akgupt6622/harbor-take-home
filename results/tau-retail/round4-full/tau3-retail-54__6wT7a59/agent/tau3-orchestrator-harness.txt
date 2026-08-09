@@ -1,0 +1,111 @@
+2026-08-09 01:13:40.139 | WARNING  | tau2.utils.utils:<module>:14 - No .env file found
+2026-08-09 01:13:40.139 | INFO     | tau2.utils.utils:<module>:22 - Using data directory from environment: /opt/tau2-bench/data
+2026-08-09 01:13:41.199 | INFO     | tau2.voice.utils.utils:<module>:26 - Found 4 continuous noise files in the directory /opt/tau2-bench/data/voice/background_noise_audio_pcm_mono_verified/continuous
+2026-08-09 01:13:41.199 | INFO     | tau2.voice.utils.utils:<module>:33 - Found 5 burst noise files in the directory /opt/tau2-bench/data/voice/background_noise_audio_pcm_mono_verified/bursts
+2026-08-09 01:13:41.399 | INFO     | tau2.utils.llm_utils:<module>:102 - LiteLLM: Cache is disabled
+2026-08-09 01:13:41.738 | DEBUG    | tau2.registry:<module>:282 - Registering default components...
+2026-08-09 01:13:41.738 | DEBUG    | tau2.registry:<module>:344 - Default components registered successfully. Registry info: {
+  "domains": [
+    "mock",
+    "airline",
+    "retail",
+    "telecom",
+    "telecom-workflow",
+    "banking_knowledge"
+  ],
+  "agents": [
+    "llm_agent",
+    "llm_agent_gt",
+    "llm_agent_solo",
+    "discrete_time_audio_native_agent"
+  ],
+  "users": [
+    "user_simulator",
+    "dummy_user",
+    "voice_streaming_user_simulator"
+  ],
+  "task_sets": [
+    "mock",
+    "airline",
+    "retail",
+    "telecom_full",
+    "telecom_small",
+    "telecom",
+    "telecom-workflow",
+    "banking_knowledge"
+  ]
+}
+2026-08-09 01:13:42.042 | INFO     | tau2.orchestrator.orchestrator:_validate_mode_compatibility:477 - Orchestrator initialized in HALF_DUPLEX mode (turn-based) with agent=LLMAgent, user=UserSimulator
+2026-08-09 01:13:42.043 | WARNING  | tau2.agent.base.llm_config:set_seed:47 - Seed is already set to 626729, resetting it to 626729
+2026-08-09 01:13:42.043 | WARNING  | tau2.agent.base.llm_config:set_seed:47 - Seed is already set to 626729, resetting it to 626729
+2026-08-09 01:13:42.043 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 0. Sending message from Role.AGENT to Role.USER
+2026-08-09 01:13:42.043 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 0.
+From role: Role.AGENT
+To role: Role.USER
+Message: AssistantMessage
+content: Hi! How can I help you today?
+is_final_chunk: True
+2026-08-09 01:13:42.043 | DEBUG    | tau2.user.user_simulator:_generate_next_message:230 - User responds to message: AssistantMessage
+content: Hi! How can I help you today?
+is_final_chunk: True
+2026-08-09 01:13:44.160 | DEBUG    | tau2.user.user_simulator:_generate_next_message:252 - Response: I’m having some financial trouble. I need to cancel or return all my recent orders—except possibly the boots. Can you help?
+2026-08-09 01:13:44.160 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 1. Sending message from Role.USER to Role.AGENT
+2026-08-09 01:13:44.160 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 1.
+From role: Role.USER
+To role: Role.AGENT
+Message: UserMessage
+content: I’m having some financial trouble. I need to cancel or return all my recent orders—except possibly the boots. Can you help?
+is_final_chunk: True
+2026-08-09 01:13:45.871 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 2. Sending message from Role.AGENT to Role.USER
+2026-08-09 01:13:45.871 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 2.
+From role: Role.AGENT
+To role: Role.USER
+Message: AssistantMessage
+content: {"message":"I’m sorry you’re dealing with that. I can help review your recent orders and determine which can be cancelled or returned, while leaving the boots aside for now. First, please provide the email address on your account so I can authenticate you."}
+is_final_chunk: True
+2026-08-09 01:13:45.871 | DEBUG    | tau2.user.user_simulator:_generate_next_message:230 - User responds to message: AssistantMessage
+content: {"message":"I’m sorry you’re dealing with that. I can help review your recent orders and determine which can be cancelled or returned, while leaving the boots aside for now. First, please provide the email address on your account so I can authenticate you."}
+is_final_chunk: True
+2026-08-09 01:13:46.930 | DEBUG    | tau2.user.user_simulator:_generate_next_message:252 - Response: silva7872@example.com
+2026-08-09 01:13:46.930 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 3. Sending message from Role.USER to Role.AGENT
+2026-08-09 01:13:46.930 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 3.
+From role: Role.USER
+To role: Role.AGENT
+Message: UserMessage
+content: silva7872@example.com
+is_final_chunk: True
+2026-08-09 01:13:48.204 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 4. Sending message from Role.AGENT to Role.ENV
+2026-08-09 01:13:48.204 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 4.
+From role: Role.AGENT
+To role: Role.ENV
+Message: AssistantMessage
+ToolCalls:
+ToolCall (from assistant)
+id: call_7dcAwVUymSJtpYHGLPEa27Z5
+name: find_user_id_by_email
+arguments:
+{
+  "email": "silva7872@example.com"
+}
+is_final_chunk: True
+2026-08-09 01:13:48.204 | DEBUG    | tau2.environment.environment:get_response:454 - Response: Error: User not found
+2026-08-09 01:13:48.205 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 5. Sending message from Role.ENV to Role.AGENT
+2026-08-09 01:13:48.205 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 5.
+From role: Role.ENV
+To role: Role.AGENT
+Message: ToolMessage (responding to assistant)
+timestamp: 2026-08-09T01:13:48.205046
+content: Error: User not found
+Error
+Invalid type dict in attribute 'llm.input_messages.6.message.content' value sequence. Expected one of ['bool', 'str', 'bytes', 'int', 'float'] or None
+2026-08-09 01:13:49.480 | DEBUG    | tau2.orchestrator.orchestrator:step:833 - Step 6. Sending message from Role.AGENT to Role.USER
+2026-08-09 01:13:49.480 | DEBUG    | tau2.orchestrator.orchestrator:step:836 - Step 6.
+From role: Role.AGENT
+To role: Role.USER
+Message: AssistantMessage
+content: {"message":"I couldn’t find an account with that email address. Please provide your first name, last name, and the ZIP code for your account’s address so I can authenticate you."}
+is_final_chunk: True
+2026-08-09 01:13:49.480 | DEBUG    | tau2.user.user_simulator:_generate_next_message:230 - User responds to message: AssistantMessage
+content: {"message":"I couldn’t find an account with that email address. Please provide your first name, last name, and the ZIP code for your account’s address so I can authenticate you."}
+is_final_chunk: True
+2026-08-09 01:13:51.521 | DEBUG    | tau2.user.user_simulator:_generate_next_message:252 - Response: ###OUT-OF-SCOPE###
