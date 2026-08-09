@@ -267,3 +267,15 @@ new messy failure shape after passing fixpack2), 52 (task-defect suspect,
 remaining failures are one residual, one unstable, one suspected defect).
 Next: matched full runs of the final harness for the writeup's required
 baseline-vs-final comparison.
+
+## Step 12 — Final harness, full run 1: 97/114 (mean 0.851)
+
+vs. stock baseline 83/82/89 (avg 0.743): +14 tasks over the average, +8 over
+the best baseline run. Zero exceptions/retries; all parser cross-checks hold.
+8 of the 15 deterministic-core tasks now pass (5, 8, 9, 27, 32, 67, 72, 107).
+17 failures: 12 from the known ever-failed pool (incl. defect-suspects 52,
+105) and 5 first-time failures (1, 49, 60, 81, 111) — all with pre-existing
+failure shapes, 111 a known fragile pass: consistent with flake-tier rotation,
+no caused-regression signature. Watch-item: modify-family failures (104, 110,
+111) across the remaining matched finals. Single-run caveat: the ±7 noise
+floor means the required 3-run matched average is what the writeup reports.
