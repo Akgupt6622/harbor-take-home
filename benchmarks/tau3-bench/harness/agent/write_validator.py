@@ -39,6 +39,9 @@ SKIPPED_CALL_MESSAGE: str = (
 )
 
 _SQUASH_PATTERN: re.Pattern[str] = re.compile(r"[\s,\-_]+")
+_OPTION_BOUNCE_PATTERN: re.Pattern[str] = re.compile(
+    r"VALIDATOR: Replacement (\S+) changes '([^']+)' from '[^']*' to '([^']+)'"
+)
 
 
 @dataclass
@@ -51,6 +54,7 @@ class ConversationFacts:
     users: dict[str, dict[str, Any]] = field(default_factory=dict)
     successful_writes: list[tuple[str, dict[str, Any]]] = field(default_factory=list)
     user_text: str = ""
+    option_bounces: set[tuple[str, str, str]] = field(default_factory=set)
 
 
 def _parse_payload(content: Any) -> Optional[dict[str, Any]]:
@@ -79,12 +83,17 @@ def collect_facts(conversation: Sequence[Mapping[str, Any]]) -> ConversationFact
             )
         if role != "tool" or message.get("error"):
             continue
+        content = message.get("content")
+        if isinstance(content, str) and content.startswith("VALIDATOR:"):
+            signature = _OPTION_BOUNCE_PATTERN.search(content)
+            if signature is not None:
+                facts.option_bounces.add(
+                    (signature.group(1), signature.group(2), signature.group(3))
+                )
+            continue  # bounced calls were never executed; they must not enter history
         matched = calls.get(str(message.get("id") or ""))
         if matched is None:
             continue
-        content = message.get("content")
-        if isinstance(content, str) and content.startswith("VALIDATOR:"):
-            continue  # bounced calls were never executed; they must not enter history
         name, arguments = matched
         if name in AUTH_TOOL_NAMES:
             facts.authenticated = True
@@ -258,12 +267,17 @@ def validate_write(
             old_value = current_options.get(str(option))
             if old_value is None or old_value.lower() == new_value.lower():
                 continue
+            # bounce-once: a re-issued identical change after a prior V3
+            # bounce counts as confirmation and passes.
+            if (new_id, str(option), new_value) in facts.option_bounces:
+                continue
             if not _mentioned_by_user(new_value, facts.user_text):
                 return (
                     f"VALIDATOR: Replacement {new_id} changes '{option}' from "
                     f"'{old_value}' to '{new_value}', but the user has not "
-                    f"mentioned '{new_value}'. Ask the user to explicitly "
-                    f"confirm this '{option}' change (or choose a variant "
-                    f"that keeps '{old_value}'), then retry."
+                    f"mentioned '{new_value}'. If the user already agreed to "
+                    f"this, simply re-issue the same call and it will pass; "
+                    f"otherwise ask them to confirm this '{option}' change "
+                    f"(or choose a variant that keeps '{old_value}'), then retry."
                 )
     return None

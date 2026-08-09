@@ -699,3 +699,54 @@ def test_item_bounce_names_the_order_that_has_it() -> None:
     assert bounce is not None
     assert "IS in your already-fetched order #W1" in bounce
     assert "consumed nothing" in bounce
+
+
+def test_v3_bounces_once_then_passes_on_reissue() -> None:
+    facts = wv.ConversationFacts()
+    facts.authenticated = True
+    facts.orders["#W1"] = {
+        "order_id": "#W1",
+        "items": [
+            {
+                "item_id": "old1",
+                "product_id": "P1",
+                "options": {"piece count": "3-piece"},
+            }
+        ],
+    }
+    facts.products["P1"] = {
+        "product_id": "P1",
+        "variants": {
+            "new1": {
+                "item_id": "new1",
+                "available": True,
+                "options": {"piece count": "2-piece"},
+            }
+        },
+    }
+    args = {
+        "order_id": "#W1",
+        "item_ids": ["old1"],
+        "new_item_ids": ["new1"],
+        "payment_method_id": "pm",
+    }
+    first = wv.validate_write("exchange_delivered_order_items", args, facts)
+    assert first is not None and "re-issue" in first
+    facts.option_bounces.add(("new1", "piece count", "2-piece"))
+    assert wv.validate_write("exchange_delivered_order_items", args, facts) is None
+
+
+def test_collect_facts_recovers_option_bounce_signatures() -> None:
+    conversation = [
+        {
+            "role": "tool",
+            "id": "x",
+            "content": "VALIDATOR: Replacement new1 changes 'piece count' from "
+            "'3-piece' to '2-piece', but the user has not mentioned "
+            "'2-piece'.",
+            "error": False,
+            "tool_calls": [],
+        },
+    ]
+    facts = wv.collect_facts(conversation)
+    assert ("new1", "piece count", "2-piece") in facts.option_bounces
