@@ -336,3 +336,12 @@ the agent dead-ended into transfer. Bounces did fire (8 trials show VALIDATOR:
 text in LLM span inputs; runner stdout does not carry them). One-line fix:
 tool results starting with "VALIDATOR:" never enter write history; regression
 test added (109 tests). Re-verification on the identical frozen set follows.
+
+## Step 16 — round4-v2: phantom fix verified, gate clean (15/27 → 20/27)
+
+Matched A/B on the frozen set: FIXED 1, 8, 72, 81, 99; zero regressions;
+compare exit 0. All round4-v1 wins held; canaries and controls clean.
+Pre-registered criteria: flips 4/5 met (98 persists), canaries met, controls
+met; {49, 60} option-drift pair did not re-flip — the one open agent-side
+problem (V3 confirm-turn not converting). 38/41 informational as registered.
+Projection: ~105/114 on the full split. Next: stage-2 full acceptance run.
