@@ -301,3 +301,24 @@ impossible exchange); 91 unstable (third distinct failure shape); 98 improved
 (user_not_found) plus known misses; 31/64/110/104/112/41 shuffle within known
 shapes — candidates for the flake tier or one more targeted pass after the
 triple-final.
+
+## Step 14 — Harness round 4: write validator + checklist consolidation
+
+Structural change (commits 11d204b, 3575fbf): agent-side write validator (5
+mechanical checks, bounce-with-guidance, 3-bounce cap, import-guarded) wired
+at the only genuinely-loaded harness point (the adapter aliases most harness
+modules to tau2 — llm_agent is live); policy consolidated into one pre-write
+checklist with explicit defaults, plus 10 evidence-cited residual fixes.
+Registry corrected by round-4 evidence: 41 and 38 are sim/gold wobbles, 110
+was a graded no-op write (perform-anyway rule), 64's gold contradicts strict
+option preservation (V3 confirm-turn covers it).
+
+**Pre-registered verification (round4-verify, 27 tasks, frozen before any
+run):** members = 9 residuals + 6 regressed re-checks + 7 stratified canaries
+(one per validator mechanism: 8 auth, 27/93 mapping, 99/107 variant, 72 lock,
+32 transfer); controls = 5 stable passes (seed 17). Criteria: zero caused-
+signature regressions in `cli compare runs/final runs/round4-v1` with full
+history; all 7 canaries pass; >=4 of {91, 98, 104, 110, 112} flip; both {49,
+60} re-flip; {1, 64, 81, 111} and {38, 41} informational (flake/wobble
+calibration); controls 5/5. Then stage 2: full-run acceptance, then the
+triple-final.

@@ -41,7 +41,7 @@
   {
     "cause_id": "exchange_payment_method_assumed",
     "status": "proposed",
-    "description": "When proposing an exchange with a price difference, the agent assumes the original payment method instead of asking; the user declines the otherwise-correct proposal.",
+    "description": "When proposing an exchange with a price difference, the agent assumes the original payment method instead of asking; the user declines the otherwise-correct proposal. Round-4 finding: 41 is a sim/gold wobble (sim explicitly chose the credit card; gold wants paypal; scenario states no preference) \u2014 informational only. 98 confirmed a genuine agent bug (payment-id menu transposed vs DB); addressed by call-time id re-derivation.",
     "tasks": [
       "tau3-retail-52",
       "tau3-retail-98"
@@ -125,7 +125,7 @@
   {
     "cause_id": "multi_request_scope_errors",
     "status": "proposed",
-    "description": "On multi-part requests the agent drops or over-scopes actions: modifies extra items, performs a return where an exchange was wanted, or misses one of several orders. Heterogeneous; needs per-task reads before a fix is stated.",
+    "description": "On multi-part requests the agent drops or over-scopes actions: modifies extra items, performs a return where an exchange was wanted, or misses one of several orders. Heterogeneous; needs per-task reads before a fix is stated. Round-4 findings: 110's 'dropped' modify was deliberate (gold grades a no-op write; fixed via perform-anyway rule); 38's residual is a cancel-reason wobble (user said 'ordered by mistake', gold wants 'no longer needed') \u2014 informational.",
     "tasks": [
       "tau3-retail-27",
       "tau3-retail-31",
@@ -322,7 +322,7 @@
   {
     "cause_id": "variant_unmentioned_options_drift",
     "status": "confirmed",
-    "description": "CAUSED by the round-1 variant guidance: 'match the requested options' licensed free choice on unmentioned dimensions. Tasks 49 and 60 (passed 3/3 baselines) both picked 8555936349 (blue/8h/IPX4) where gold preserves the current item's unmentioned options (49: blue/6h/IPX4; 60: blue/8h/not-resistant); the sim echoed the agent's wrong candidate. Verified against the catalog.",
+    "description": "CAUSED by the round-1 variant guidance: 'match the requested options' licensed free choice on unmentioned dimensions. Tasks 49 and 60 (passed 3/3 baselines) both picked 8555936349 (blue/8h/IPX4) where gold preserves the current item's unmentioned options (49: blue/6h/IPX4; 60: blue/8h/not-resistant); the sim echoed the agent's wrong candidate. Verified against the catalog. Tension noted: task 64's gold does NOT preserve unmentioned color on a superlative request \u2014 V3 handles via confirm-turn rather than hard preservation.",
     "tasks": [
       "tau3-retail-49",
       "tau3-retail-60"
