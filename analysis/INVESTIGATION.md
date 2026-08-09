@@ -361,3 +361,11 @@ canaries {8, 27, 52, 91, 104, 112}; 5 controls never-failed-anywhere (seed
 fixed); controls 5/5; compare vs runs/round4-full exit 0. {2, 4, 24, 61,
 108, 10, 33, 54, 67} informational (flake/wobble calibration). Then full
 acceptance; target ≥104 to certify round-4.2 over `final`; then triple-final.
+
+## Step 18 — round42-v1: repairs verified, gate clean (11/24 → 20/24)
+
+Diagnosed flips 3/4 (9, 107 bounce-loop; 22 country; 75 persists — unread).
+Canaries held; controls 5/5; compare exit 0; 52 flip-back classified
+flake-suspect by the gate (1/7 lifetime). Recurring watch-items: 2
+(missing_communication.10 twice), 67 (auth user_not_found twice). Next:
+full acceptance of harness d5055887cef8; certify over `final` at ≥104.
