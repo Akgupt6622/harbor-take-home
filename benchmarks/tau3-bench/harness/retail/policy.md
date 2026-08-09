@@ -119,7 +119,7 @@ An order can only be modified if its status is 'pending', and you should check i
 
 For a pending order, you can take actions to modify its shipping address, payment method, or product item options, but nothing else.
 
-When the user corrects part of an existing address, copy every field they did not mention verbatim from the stored address on the order or profile (for example, keep country exactly as stored, such as 'USA'). When the user instead provides a complete new address (such as a move to a new home) and gives no second address line, set address2 to '' rather than carrying over the old one; the copy-verbatim rule applies only to partial corrections of a stored address.
+When the user corrects part of an existing address, copy every field they did not mention verbatim from the stored address on the order or profile. When the user instead provides a complete new address (such as a move to a new home) and gives no second address line, set address2 to '' rather than carrying over the old one; the copy-verbatim rule applies only to partial corrections of a stored address. In every case — partial correction or complete replacement, order address or profile default — the country field must be written exactly as stored in existing records (e.g. 'USA'), regardless of how the user phrases it ('United States', 'the US', etc.).
 
 ### Modify payment
 

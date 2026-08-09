@@ -626,23 +626,76 @@ def test_write_tool_registry_matches_retail_toolkit(tool_name: str) -> None:
 def test_bounced_write_does_not_enter_history() -> None:
     conversation = [
         {"role": "user", "content": "please exchange my camera", "tool_calls": []},
-        {"role": "tool", "id": "a1", "content": "sofia_li_9219", "error": False,
-         "tool_calls": []},
-        {"role": "assistant", "content": "",
-         "tool_calls": [{"id": "a1x", "name": "find_user_id_by_name_zip",
-                          "arguments": {"first_name": "S", "last_name": "L", "zip": "1"}}]},
-        {"role": "tool", "id": "a1x", "content": "sofia_li_9219", "error": False,
-         "tool_calls": []},
-        {"role": "assistant", "content": "",
-         "tool_calls": [{"id": "b2", "name": "exchange_delivered_order_items",
-                          "arguments": {"order_id": "#W1", "item_ids": ["i1"],
-                                         "new_item_ids": ["i2"],
-                                         "payment_method_id": "pm"}}]},
-        {"role": "tool", "id": "b2",
-         "content": "VALIDATOR: Order #W1 has not been fetched in this conversation; "
-                     "call get_order_details first.",
-         "error": False, "tool_calls": []},
+        {
+            "role": "tool",
+            "id": "a1",
+            "content": "sofia_li_9219",
+            "error": False,
+            "tool_calls": [],
+        },
+        {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+                {
+                    "id": "a1x",
+                    "name": "find_user_id_by_name_zip",
+                    "arguments": {"first_name": "S", "last_name": "L", "zip": "1"},
+                }
+            ],
+        },
+        {
+            "role": "tool",
+            "id": "a1x",
+            "content": "sofia_li_9219",
+            "error": False,
+            "tool_calls": [],
+        },
+        {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+                {
+                    "id": "b2",
+                    "name": "exchange_delivered_order_items",
+                    "arguments": {
+                        "order_id": "#W1",
+                        "item_ids": ["i1"],
+                        "new_item_ids": ["i2"],
+                        "payment_method_id": "pm",
+                    },
+                }
+            ],
+        },
+        {
+            "role": "tool",
+            "id": "b2",
+            "content": "VALIDATOR: Order #W1 has not been fetched in this conversation; "
+            "call get_order_details first.",
+            "error": False,
+            "tool_calls": [],
+        },
     ]
     facts = wv.collect_facts(conversation)
     assert facts.successful_writes == []
     assert facts.authenticated is True
+
+
+def test_item_bounce_names_the_order_that_has_it() -> None:
+    facts = wv.ConversationFacts()
+    facts.authenticated = True
+    facts.orders["#W1"] = {"order_id": "#W1", "items": [{"item_id": "boots"}]}
+    facts.orders["#W2"] = {"order_id": "#W2", "items": [{"item_id": "puzzle"}]}
+    bounce = wv.validate_write(
+        "exchange_delivered_order_items",
+        {
+            "order_id": "#W2",
+            "item_ids": ["boots"],
+            "new_item_ids": ["boots2"],
+            "payment_method_id": "pm",
+        },
+        facts,
+    )
+    assert bounce is not None
+    assert "IS in your already-fetched order #W1" in bounce
+    assert "consumed nothing" in bounce

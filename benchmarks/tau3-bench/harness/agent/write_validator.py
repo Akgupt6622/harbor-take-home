@@ -191,11 +191,26 @@ def validate_write(
     item_ids = [str(item_id) for item_id in arguments.get("item_ids") or []]
     missing = sorted({item_id for item_id in item_ids if item_id not in order_items})
     if missing:
+        located = {
+            item_id: other_id
+            for item_id in missing
+            for other_id, other in facts.orders.items()
+            if other_id != order_id
+            and any(str(i.get("item_id")) == item_id for i in other.get("items") or [])
+        }
+        location_hint = "".join(
+            f" Item {item_id} IS in your already-fetched order {other_id} — "
+            f"use that order for it."
+            for item_id, other_id in located.items()
+        )
         return (
             f"VALIDATOR: Item(s) {', '.join(missing)} are not in order "
-            f"{order_id} (it contains: {', '.join(sorted(order_items))}). "
-            f"Re-check with get_order_details which order actually contains "
-            f"each item, then retry with matching order and item ids."
+            f"{order_id} (it contains: {', '.join(sorted(order_items))})."
+            f"{location_hint} This bounced call was NOT executed and consumed "
+            f"nothing (no return/exchange budget, no lock). If an item is in "
+            f"none of your fetched orders, locate it with get_order_details "
+            f"on the user's other orders. Split the request per order and "
+            f"retry with matching order and item ids."
         )
     if tool_name not in REPLACEMENT_TOOL_NAMES:
         return None
