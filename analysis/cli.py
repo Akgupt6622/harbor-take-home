@@ -370,10 +370,62 @@ def main(
     run_parser.add_argument("--job-name", required=True, dest="harbor_job")
     run_parser.add_argument("--yes", action="store_true")
 
+    compare_parser = sub.add_parser(
+        "compare", help="diff two parsed+triaged jobs (A=reference, B=candidate)"
+    )
+    compare_parser.add_argument("job_dir_a", type=Path)
+    compare_parser.add_argument("job_dir_b", type=Path)
+    compare_parser.add_argument(
+        "--touched-tools",
+        default=None,
+        help="comma-separated tool families changed by the candidate",
+    )
+    compare_parser.add_argument(
+        "--history",
+        default="",
+        help="comma-separated runs/<job> dirs supplying prior failure shapes",
+    )
+
     args, extra = parser.parse_known_args(list(argv))
     if extra and args.command != "run":
         print(f"error: unrecognized arguments: {' '.join(extra)}", file=sys.stderr)
         return 2
+    if args.command == "compare":
+        from analysis.compare import compare, load_verdicts, render
+
+        named_dirs = [
+            (str(path), path if path.is_absolute() else root / path)
+            for path in (
+                args.job_dir_a,
+                args.job_dir_b,
+                *(Path(name) for name in args.history.split(",") if name),
+            )
+        ]
+        missing_sources = [
+            path / "tasks.jsonl"
+            for _, path in named_dirs
+            if not (path / "tasks.jsonl").is_file()
+        ]
+        if missing_sources:
+            listing = ", ".join(str(path) for path in missing_sources)
+            print(f"error: tasks.jsonl not found: {listing}", file=sys.stderr)
+            return 2
+        verdicts = [(name, load_verdicts(path)) for name, path in named_dirs]
+        touched = (
+            frozenset(tool for tool in args.touched_tools.split(",") if tool)
+            if args.touched_tools is not None
+            else None
+        )
+        result = compare(
+            verdicts[0][1],
+            verdicts[1][1],
+            verdicts[2:],
+            touched,
+            name_a=verdicts[0][0],
+            name_b=verdicts[1][0],
+        )
+        print(render(result), end="")
+        return 1 if result.caused_signature else 0
     job_dir: Path = args.job_dir if args.job_dir.is_absolute() else root / args.job_dir
     if args.command == "run":
         return cmd_run(
