@@ -318,5 +318,24 @@
     ],
     "proposed_by": "llm",
     "verification": null
+  },
+  {
+    "cause_id": "variant_unmentioned_options_drift",
+    "status": "confirmed",
+    "description": "CAUSED by the round-1 variant guidance: 'match the requested options' licensed free choice on unmentioned dimensions. Tasks 49 and 60 (passed 3/3 baselines) both picked 8555936349 (blue/8h/IPX4) where gold preserves the current item's unmentioned options (49: blue/6h/IPX4; 60: blue/8h/not-resistant); the sim echoed the agent's wrong candidate. Verified against the catalog.",
+    "tasks": [
+      "tau3-retail-49",
+      "tau3-retail-60"
+    ],
+    "evidence": {
+      "tau3-retail-49": "runs/final/transcripts/tau3-retail-49__XkFSwLB.md",
+      "tau3-retail-60": "runs/final/transcripts/tau3-retail-60__p5dtY7b.md"
+    },
+    "proposed_fix": "Unmentioned options must stay identical to the current item's; never substitute silently (applied).",
+    "discovered_in": [
+      "final"
+    ],
+    "proposed_by": "human",
+    "verification": null
   }
 ]

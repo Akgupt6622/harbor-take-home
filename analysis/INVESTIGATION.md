@@ -279,3 +279,25 @@ failure shapes, 111 a known fragile pass: consistent with flake-tier rotation,
 no caused-regression signature. Watch-item: modify-family failures (104, 110,
 111) across the remaining matched finals. Single-run caveat: the ±7 noise
 floor means the required 3-run matched average is what the writeup reports.
+
+## Step 13 — Final-run transition analysis; one caused regression found and fixed
+
+**Fixed (failed ≥2/3 baselines, now pass) — 18 tasks:** the full auth cluster
+(5/6/7/8/9/67/68), mapping (27, 93), variants (18, 45, 99, 107), transfer (32),
+lock-ordering (71, 72), plus 10 and 20.
+
+**Regressed (passed 3/3 baselines, now fail) — 5 tasks:** 1, 81, 111 carry
+pre-existing shapes (flake rotation; 111 was a fragile pass). 49 and 60 are a
+CAUSED regression with a verified mechanism: the variant guidance said "match
+the requested options" without constraining unmentioned ones — both tasks
+picked blue/8h/IPX4 (8555936349) where gold preserves the current item's
+unmentioned options. Fixed with one sentence (unmentioned options stay
+identical); registered as variant_unmentioned_options_drift. Verification
+rides with the later triple-final.
+
+**Still failing (12):** defect-suspects 52/105 (105 now doesn't attempt the
+impossible exchange); 91 unstable (third distinct failure shape); 98 improved
+(variant component gone, payment remains); 38/59 show auth wobbles
+(user_not_found) plus known misses; 31/64/110/104/112/41 shuffle within known
+shapes — candidates for the flake tier or one more targeted pass after the
+triple-final.
