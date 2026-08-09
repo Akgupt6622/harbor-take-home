@@ -82,6 +82,9 @@ def collect_facts(conversation: Sequence[Mapping[str, Any]]) -> ConversationFact
         matched = calls.get(str(message.get("id") or ""))
         if matched is None:
             continue
+        content = message.get("content")
+        if isinstance(content, str) and content.startswith("VALIDATOR:"):
+            continue  # bounced calls were never executed; they must not enter history
         name, arguments = matched
         if name in AUTH_TOOL_NAMES:
             facts.authenticated = True

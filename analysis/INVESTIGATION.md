@@ -322,3 +322,17 @@ history; all 7 canaries pass; >=4 of {91, 98, 104, 110, 112} flip; both {49,
 60} re-flip; {1, 64, 81, 111} and {38, 41} informational (flake/wobble
 calibration); controls 5/5. Then stage 2: full-run acceptance, then the
 triple-final.
+
+## Step 15 — round4-v1: validator phantom-write bug found by compare gate
+
+round4-v1 (15/27): 6 real fixes (31, 91, 104, 110, 111, 112 — the modify/scope
+residual family), all 7 canaries' mechanisms held where untouched, controls
+5/5. But compare exited 1: 99 caused-signature + 49/60/98/8/72 churned or
+regressed to missing_action shapes. Evidence (99 turns 31-38): the validator
+counted its own BOUNCED calls as executed writes — bounce results are
+error=False by design, so collect_facts entered them into successful_writes;
+the retry then hit a phantom "return or exchange already submitted" (V4a) and
+the agent dead-ended into transfer. Bounces did fire (8 trials show VALIDATOR:
+text in LLM span inputs; runner stdout does not carry them). One-line fix:
+tool results starting with "VALIDATOR:" never enter write history; regression
+test added (109 tests). Re-verification on the identical frozen set follows.

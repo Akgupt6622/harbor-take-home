@@ -621,3 +621,28 @@ class TestBounceToolCalls:
 )
 def test_write_tool_registry_matches_retail_toolkit(tool_name: str) -> None:
     assert tool_name in wv.WRITE_TOOL_NAMES
+
+
+def test_bounced_write_does_not_enter_history() -> None:
+    conversation = [
+        {"role": "user", "content": "please exchange my camera", "tool_calls": []},
+        {"role": "tool", "id": "a1", "content": "sofia_li_9219", "error": False,
+         "tool_calls": []},
+        {"role": "assistant", "content": "",
+         "tool_calls": [{"id": "a1x", "name": "find_user_id_by_name_zip",
+                          "arguments": {"first_name": "S", "last_name": "L", "zip": "1"}}]},
+        {"role": "tool", "id": "a1x", "content": "sofia_li_9219", "error": False,
+         "tool_calls": []},
+        {"role": "assistant", "content": "",
+         "tool_calls": [{"id": "b2", "name": "exchange_delivered_order_items",
+                          "arguments": {"order_id": "#W1", "item_ids": ["i1"],
+                                         "new_item_ids": ["i2"],
+                                         "payment_method_id": "pm"}}]},
+        {"role": "tool", "id": "b2",
+         "content": "VALIDATOR: Order #W1 has not been fetched in this conversation; "
+                     "call get_order_details first.",
+         "error": False, "tool_calls": []},
+    ]
+    facts = wv.collect_facts(conversation)
+    assert facts.successful_writes == []
+    assert facts.authenticated is True
