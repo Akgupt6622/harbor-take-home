@@ -392,3 +392,11 @@ Known accepted residue: 38/41 wobbles, 49/9/60 drift instability, 52/105
 defects, 64 flake. Proceeding to the triple-final on this harness; the three
 full runs double as at-scale verification of rounds 4.3/4.4 (compare-gated,
 reported honestly either way).
+
+## Step 21 — Round 4.5: enumerate-and-ask closes the variant-ambiguity gap
+
+Design: stated changes + unmentioned options defaulting to current values;
+one qualifying available variant proceeds, zero-or-many means list-and-ask
+(never a silent guess). V3 text aligned. Targets 9/49/60/79 and reduces
+run-to-run variance. Verified at scale inside the triple-final (pre-declared:
+reported honestly either way).
