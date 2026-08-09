@@ -369,3 +369,14 @@ Canaries held; controls 5/5; compare exit 0; 52 flip-back classified
 flake-suspect by the gate (1/7 lifetime). Recurring watch-items: 2
 (missing_communication.10 twice), 67 (auth user_not_found twice). Next:
 full acceptance of harness d5055887cef8; certify over `final` at ≥104.
+
+## Step 19 — round42-full (101/114) and the bounce-once repair
+
+Acceptance run: 101/114 (mean 0.886), +4 over `final`, 10 fixed / 6 regressed;
+below the pre-registered >=104 bar. Gate flagged 23 and 95: 23 was a V3
+false-bounce loop (30 identical bounces on a piece-count change the user
+wanted but never spoke verbatim -> transfer); 95 had zero bounces (compound-
+confirmation stall, watch). Repair (round 4.3): V3 bounces once per
+(variant, option, value) — re-issuing the identical call counts as
+confirmation. Remaining known residue: 38/41 wobbles, 49 drift, 52/105
+defects, 64 flake, 75/95 unread stalls, 2 communicate-proxy recurrence.
