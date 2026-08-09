@@ -380,3 +380,15 @@ confirmation stall, watch). Repair (round 4.3): V3 bounces once per
 (variant, option, value) — re-issuing the identical call counts as
 confirmation. Remaining known residue: 38/41 wobbles, 49 drift, 52/105
 defects, 64 flake, 75/95 unread stalls, 2 communicate-proxy recurrence.
+
+## Step 20 — Round 4.4: last optimization pass before certification
+
+Free reads of the remaining recoverables: 75's transfer summary states the
+sim confirmed twice but V3 kept rejecting — already repaired by bounce-once
+(round 4.3). 95 died at a compound two-order yes/no — new rule: one
+confirmation and one call per action per order. 2/3's NL assertion wants the
+variant count stated — new rule: state exact counts with default scope.
+Known accepted residue: 38/41 wobbles, 49/9/60 drift instability, 52/105
+defects, 64 flake. Proceeding to the triple-final on this harness; the three
+full runs double as at-scale verification of rounds 4.3/4.4 (compare-gated,
+reported honestly either way).
