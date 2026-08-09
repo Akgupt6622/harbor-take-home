@@ -345,3 +345,19 @@ Pre-registered criteria: flips 4/5 met (98 persists), canaries met, controls
 met; {49, 60} option-drift pair did not re-flip — the one open agent-side
 problem (V3 confirm-turn not converting). 38/41 informational as registered.
 Projection: ~105/114 on the full split. Next: stage-2 full acceptance run.
+
+## Step 17 — Round 4.2 repairs + pre-registered verification
+
+Diagnoses from round4-full (step 16 commit): bounce-loop friction (9/75/107 —
+model retried an identical V1 violation, then hallucinated a consumed exchange
+budget) and country transcription (22 — 'United States' vs stored 'USA', via
+the complete-replacement rule). Repairs (63706c0): V1 bounces name the fetched
+order that actually holds a misplaced item and state that bounced calls
+consume nothing; country canonicalization for all address writes.
+
+**round42-verify (24 tasks, frozen):** members = 13 round4-full regressions +
+canaries {8, 27, 52, 91, 104, 112}; 5 controls never-failed-anywhere (seed
+23). Criteria: {9, 75, 107, 22} flip; canaries hold (incl. 52 staying
+fixed); controls 5/5; compare vs runs/round4-full exit 0. {2, 4, 24, 61,
+108, 10, 33, 54, 67} informational (flake/wobble calibration). Then full
+acceptance; target ≥104 to certify round-4.2 over `final`; then triple-final.
